@@ -203,6 +203,7 @@ dependencies = [
 name = "gbrs"
 version = "0.1.0"
 dependencies = [
+ "clap",
  "minifb",
  "rand",
 ]

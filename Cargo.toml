@@ -10,3 +10,4 @@ edition = "2018"
 minifb = "0.19.3"
 # For now for testing
 rand = "0.8.3"
+clap = "2.33.3"

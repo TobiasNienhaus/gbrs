@@ -1,47 +1,61 @@
 mod game_boy;
+mod window;
 
 use minifb::{Key, KeyRepeat, Window, WindowOptions};
 use std::path::PathBuf;
 use std::str::FromStr;
 
-// Actually 16742.005692282 microseconds
-const REFRESH_RATE: u64 = 16742;
+use crate::window::GbWindow;
+use clap::{App, Arg};
 
-const SCREEN_WIDTH: usize = 160;
-const SCREEN_HEIGHT: usize = 144;
-const PIXEL_COUNT: usize = SCREEN_WIDTH * SCREEN_HEIGHT;
+struct CliOpts {
+    rom_path: String,
+    magnification: usize,
+}
 
-type FrameBuffer = [u32; PIXEL_COUNT];
+impl CliOpts {
+    fn load() -> CliOpts {
+        let matches = App::new("GB-rs")
+            .arg(Arg::with_name("rom-path").required(true).index(1))
+            .arg(
+                Arg::with_name("magnification")
+                    .short("m")
+                    .long("magnification")
+                    .value_name("VAL"),
+            )
+            .get_matches();
+        let rom_path = matches.value_of("rom-path").unwrap().to_owned();
+        let magnification = matches
+            .value_of("magnification")
+            .map(|o| usize::from_str(o).expect("Could not parse number"))
+            .unwrap_or(1);
+        CliOpts {
+            rom_path,
+            magnification,
+        }
+    }
+}
 
 fn main() {
-    let gb = gameboy::GameBoy::load(&PathBuf::from_str("./dev/Tetris.gb").unwrap()).unwrap();
+    let opts = CliOpts::load();
+    let gb = game_boy::GameBoy::load(&opts.rom_path.into()).unwrap();
 
     println!("Title: {}", gb.meta_data().title());
 
-    let mut buffer: FrameBuffer = [0; PIXEL_COUNT];
-    for i in buffer.iter_mut() {
-        *i = rand::random();
+    let mut window = GbWindow::new(opts.magnification);
+
+    for (idx, i) in window.buffer_mut().iter_mut().enumerate() {
+        let v = ((idx % 10) as f32 / 10f32) * u8::MAX as f32;
+        *i = (rand::random::<f32>() * v) as u32;
     }
 
-    let mut window = Window::new(
-        "GBRS",
-        SCREEN_WIDTH,
-        SCREEN_HEIGHT,
-        WindowOptions::default(),
-    )
-    .unwrap();
-
-    window.limit_update_rate(Some(std::time::Duration::from_micros(REFRESH_RATE)));
-
-    while window.is_open() && !window.is_key_down(Key::Escape) {
-        if window.is_key_pressed(Key::Space, KeyRepeat::No) {
-            for i in buffer.iter_mut() {
+    while window.is_open() {
+        if window.win().is_key_pressed(Key::Space, KeyRepeat::No) {
+            for i in window.buffer_mut().iter_mut() {
                 *i = rand::random();
             }
         }
 
-        window
-            .update_with_buffer(&buffer, SCREEN_WIDTH, SCREEN_HEIGHT)
-            .unwrap();
+        window.display();
     }
 }

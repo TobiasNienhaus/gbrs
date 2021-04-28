@@ -1,6 +1,6 @@
-use std::path::PathBuf;
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
+use std::path::PathBuf;
 
 // Max rom size in bytes
 // const MAX_ROM_SIZE: usize = 2_048_000;
@@ -17,7 +17,7 @@ const NINTENDO_GRAPHIC: [u8; 48] = [
 #[derive(Debug)]
 enum CartridgeType {
     RomOnly,
-    Unsupported // TODO
+    Unsupported, // TODO
 }
 
 impl CartridgeType {
@@ -87,7 +87,7 @@ impl RomData {
             0x52 => 1_179_648,
             0x53 => 1_310_720,
             0x54 => 1_572_864,
-            _ => 0
+            _ => 0,
         }
     }
 
@@ -115,7 +115,7 @@ impl RomData {
             ram_size: Self::read_ram_size(rom[0x149]),
             super_game_boy: rom[0x146] == 0x03,
             cartridge_type: CartridgeType::from_byte(rom[0x147]),
-            japanese: rom[0x14A] == 0x0
+            japanese: rom[0x14A] == 0x0,
         }
     }
 }
@@ -128,7 +128,7 @@ pub struct GameBoy {
 #[derive(Debug)]
 pub enum LoadingError {
     IoError(std::io::Error),
-    UnsupportedRom
+    UnsupportedRom,
 }
 
 impl From<std::io::Error> for LoadingError {
@@ -157,7 +157,7 @@ impl GameBoy {
         Ok(GameBoy {
             rom_meta_data,
             // Does that actually work?
-            rom
+            rom,
         })
     }
 
