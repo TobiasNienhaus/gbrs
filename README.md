@@ -1,2 +1,3 @@
 # gbrs
-A small Gameboy emulator
+
+A small Game Boy™ Classic emulator
