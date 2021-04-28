@@ -1,4 +1,4 @@
-mod gameboy;
+mod game_boy;
 
 use minifb::{Key, KeyRepeat, Window, WindowOptions};
 use std::path::PathBuf;
