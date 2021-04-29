@@ -17,15 +17,14 @@ const NINTENDO_GRAPHIC: [u8; 48] = [
 #[derive(Debug)]
 enum CartridgeType {
     RomOnly,
-    Unsupported, // TODO
 }
 
 impl CartridgeType {
-    pub fn from_byte(b: u8) -> CartridgeType {
-        match b {
+    pub fn from_byte(b: u8) -> LoadingResult<CartridgeType> {
+        Ok(match b {
             0x0 => CartridgeType::RomOnly,
-            _ => CartridgeType::Unsupported,
-        }
+            _ => return Err(LoadingError::UnsupportedCartridgeType),
+        })
     }
 }
 
@@ -74,8 +73,8 @@ impl RomData {
 }
 
 impl RomData {
-    fn read_rom_size(b: u8) -> usize {
-        match b {
+    fn read_rom_size(b: u8) -> LoadingResult<usize> {
+        Ok(match b {
             // TODO are these correct?
             0x0 => 32_768,
             0x1 => 65_536,
@@ -87,36 +86,36 @@ impl RomData {
             0x52 => 1_179_648,
             0x53 => 1_310_720,
             0x54 => 1_572_864,
-            _ => 0,
-        }
+            _ => return Err(LoadingError::UnsupportedRomSize),
+        })
     }
 
-    fn read_ram_size(b: u8) -> usize {
-        match b {
+    fn read_ram_size(b: u8) -> LoadingResult<usize> {
+        Ok(match b {
             0x0 => 0,
             0x1 => 2_048,
             0x2 => 8_192,
             0x3 => 32_768,
             0x4 => 131_072,
-            _ => 0,
-        }
+            _ => return Err(LoadingError::UnsupportedRamSize),
+        })
     }
 
-    fn from_rom(rom: &Rom) -> RomData {
+    fn from_rom(rom: &Rom) -> LoadingResult<RomData> {
         let bytes = &rom[0x134..=0x142];
         let mut title = String::with_capacity(16);
         for b in bytes.iter().take_while(|b| **b != 0x0) {
             title.push(*b as char);
         }
-        RomData {
+        Ok(RomData {
             title,
             color: rom[0x143] == 0x80,
-            rom_size: Self::read_rom_size(rom[0x148]),
-            ram_size: Self::read_ram_size(rom[0x149]),
+            rom_size: Self::read_rom_size(rom[0x148])?,
+            ram_size: Self::read_ram_size(rom[0x149])?,
             super_game_boy: rom[0x146] == 0x03,
-            cartridge_type: CartridgeType::from_byte(rom[0x147]),
+            cartridge_type: CartridgeType::from_byte(rom[0x147])?,
             japanese: rom[0x14A] == 0x0,
-        }
+        })
     }
 }
 
@@ -128,7 +127,9 @@ pub struct GameBoy {
 #[derive(Debug)]
 pub enum LoadingError {
     IoError(std::io::Error),
-    UnsupportedRom,
+    UnsupportedRomSize,
+    UnsupportedRamSize,
+    UnsupportedCartridgeType,
 }
 
 impl From<std::io::Error> for LoadingError {
@@ -152,7 +153,7 @@ impl GameBoy {
     pub fn load(path: &PathBuf) -> LoadingResult<GameBoy> {
         let rom = load_rom(path)?;
 
-        let rom_meta_data = RomData::from_rom(&rom);
+        let rom_meta_data = RomData::from_rom(&rom)?;
 
         Ok(GameBoy {
             rom_meta_data,
