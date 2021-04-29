@@ -1,5 +1,6 @@
-// Actually 16742.005692282 microseconds
-const REFRESH_RATE: u64 = 16742;
+// 59.727500569606 Hz
+// Actually 16742.706298828 microseconds
+const REFRESH_RATE: u64 = 16743;
 
 const SCREEN_WIDTH: usize = 160;
 const SCREEN_HEIGHT: usize = 144;
@@ -10,12 +11,15 @@ type FrameBuffer = Box<[u32]>;
 
 use minifb::{Key, KeyRepeat, Window, WindowOptions};
 
+// According to https://en.wikipedia.org/wiki/Game_Boy#Technical_specifications
+const COLOR_LOOKUP: [u32; 4] = [0xFF0F380F, 0xFF306230, 0xFF8BAC0F, 0xFF9BBC0F];
+
 pub struct GbWindow {
     true_width: usize,
     true_height: usize,
     magnification: usize,
-    small_buffer: FrameBuffer,
-    big_buffer: FrameBuffer,
+    small_buffer: Box<[u8]>,
+    big_buffer: Box<[u32]>,
     window: Window,
 }
 
@@ -40,7 +44,7 @@ impl GbWindow {
         }
     }
 
-    pub fn buffer_mut(&mut self) -> &mut FrameBuffer {
+    pub fn buffer_mut(&mut self) -> &mut Box<[u8]> {
         &mut self.small_buffer
     }
 
@@ -61,32 +65,26 @@ impl GbWindow {
     }
 
     pub fn display(&mut self) {
-        if self.magnification == 1 {
-            self.window
-                .update_with_buffer(&self.small_buffer, SCREEN_WIDTH, SCREEN_HEIGHT)
-                .unwrap();
-        } else {
-            assert_eq!(
-                Self::buffer_size() * self.magnification * self.magnification,
-                self.big_buffer_size()
-            );
-            // Very slow this thing
-            for i_small in 0..Self::buffer_size() {
-                let val = self.small_buffer[i_small];
-                let y = (i_small / SCREEN_WIDTH) * self.magnification;
-                let x = (i_small % SCREEN_WIDTH) * self.magnification;
+        assert_eq!(
+            Self::buffer_size() * self.magnification * self.magnification,
+            self.big_buffer_size()
+        );
+        // Very slow this thing
+        for i_small in 0..Self::buffer_size() {
+            let val = self.small_buffer[i_small];
+            let y = (i_small / SCREEN_WIDTH) * self.magnification;
+            let x = (i_small % SCREEN_WIDTH) * self.magnification;
 
-                for y_it in y..(y + self.magnification) {
-                    for x_it in x..(x + self.magnification) {
-                        let i_big = y_it * self.true_width + x_it;
-                        self.big_buffer[i_big] = val;
-                    }
+            for y_it in y..(y + self.magnification) {
+                for x_it in x..(x + self.magnification) {
+                    let i_big = y_it * self.true_width + x_it;
+                    self.big_buffer[i_big] = COLOR_LOOKUP[val as usize];
                 }
             }
-            self.window
-                .update_with_buffer(&self.big_buffer, self.true_width, self.true_height)
-                .unwrap();
         }
+        self.window
+            .update_with_buffer(&self.big_buffer, self.true_width, self.true_height)
+            .unwrap();
     }
 
     pub fn is_open(&self) -> bool {

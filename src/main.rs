@@ -7,6 +7,7 @@ use std::str::FromStr;
 
 use crate::window::GbWindow;
 use clap::{App, Arg};
+use rand::Rng;
 
 struct CliOpts {
     rom_path: String,
@@ -28,7 +29,7 @@ impl CliOpts {
         let magnification = matches
             .value_of("magnification")
             .map(|o| usize::from_str(o).expect("Could not parse number"))
-            .unwrap_or(1);
+            .unwrap_or(2);
         CliOpts {
             rom_path,
             magnification,
@@ -45,14 +46,13 @@ fn main() {
     let mut window = GbWindow::new(opts.magnification);
 
     for (idx, i) in window.buffer_mut().iter_mut().enumerate() {
-        let v = ((idx % 10) as f32 / 10f32) * u8::MAX as f32;
-        *i = (rand::random::<f32>() * v) as u32;
+        *i = rand::thread_rng().gen_range(0..=3);
     }
 
     while window.is_open() {
         if window.win().is_key_pressed(Key::Space, KeyRepeat::No) {
             for i in window.buffer_mut().iter_mut() {
-                *i = rand::random();
+                *i = rand::thread_rng().gen_range(0..=3);
             }
         }
 
