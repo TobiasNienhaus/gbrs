@@ -5,9 +5,9 @@ use std::path::PathBuf;
 // Max rom size in bytes
 // const MAX_ROM_SIZE: usize = 2_048_000;
 // Im pretty sure its the bottom one -> 16 MebiBytes
-const MAX_ROM_SIZE: usize = 2_097_152;
 type Rom = Box<[u8]>;
 
+#[allow(unused)]
 const NINTENDO_GRAPHIC: [u8; 48] = [
     0xCE, 0xED, 0x66, 0x66, 0xCC, 0x0D, 0x00, 0x0B, 0x03, 0x73, 0x00, 0x83, 0x00, 0x0C, 0x00, 0x0D,
     0x00, 0x08, 0x11, 0x1F, 0x88, 0x89, 0x00, 0x0E, 0xDC, 0xCC, 0x6E, 0xE6, 0xDD, 0xDD, 0xD9, 0x99,
@@ -53,14 +53,6 @@ impl RomData {
 
     pub fn is_color(&self) -> bool {
         self.color
-    }
-
-    fn rom_size(&self) -> usize {
-        self.rom_size
-    }
-
-    fn ram_size(&self) -> usize {
-        self.ram_size
     }
 
     pub fn is_super_game_boy(&self) -> bool {
@@ -143,7 +135,7 @@ pub type LoadingResult<T> = Result<T, LoadingError>;
 fn load_rom(path: &PathBuf) -> LoadingResult<Rom> {
     let mut file = File::open(path)?;
     let byte_count = file.seek(SeekFrom::End(0))?;
-    file.seek(SeekFrom::Start(0));
+    file.seek(SeekFrom::Start(0))?;
     let mut temp_buffer = Vec::with_capacity(byte_count as usize);
     file.read_to_end(&mut temp_buffer)?;
     Ok(temp_buffer.into_boxed_slice())

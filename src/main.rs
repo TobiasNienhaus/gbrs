@@ -1,8 +1,7 @@
 mod game_boy;
 mod window;
 
-use minifb::{Key, KeyRepeat, Window, WindowOptions};
-use std::path::PathBuf;
+use minifb::{Key, KeyRepeat};
 use std::str::FromStr;
 
 use crate::window::GbWindow;
@@ -45,7 +44,7 @@ fn main() {
 
     let mut window = GbWindow::new(opts.magnification);
 
-    for (idx, i) in window.buffer_mut().iter_mut().enumerate() {
+    for i in window.buffer_mut().iter_mut() {
         *i = rand::thread_rng().gen_range(0..=3);
     }
 

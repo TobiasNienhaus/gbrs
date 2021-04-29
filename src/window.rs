@@ -2,14 +2,11 @@
 // Actually 16742.706298828 microseconds
 const REFRESH_RATE: u64 = 16743;
 
-const SCREEN_WIDTH: usize = 160;
-const SCREEN_HEIGHT: usize = 144;
-const PIXEL_COUNT: usize = SCREEN_WIDTH * SCREEN_HEIGHT;
+pub const SCREEN_WIDTH: usize = 160;
+pub const SCREEN_HEIGHT: usize = 144;
+pub const PIXEL_COUNT: usize = SCREEN_WIDTH * SCREEN_HEIGHT;
 
-// Prevent buffer overflow
-type FrameBuffer = Box<[u32]>;
-
-use minifb::{Key, KeyRepeat, Window, WindowOptions};
+use minifb::{Key, Window, WindowOptions};
 
 // According to https://en.wikipedia.org/wiki/Game_Boy#Technical_specifications
 const COLOR_LOOKUP: [u32; 4] = [0xFF0F380F, 0xFF306230, 0xFF8BAC0F, 0xFF9BBC0F];
@@ -50,14 +47,6 @@ impl GbWindow {
 
     pub const fn buffer_size() -> usize {
         PIXEL_COUNT
-    }
-
-    pub const fn buffer_width() -> usize {
-        SCREEN_WIDTH
-    }
-
-    pub const fn buffer_height() -> usize {
-        SCREEN_HEIGHT
     }
 
     fn big_buffer_size(&self) -> usize {
