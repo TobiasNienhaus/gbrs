@@ -1,3 +1,6 @@
+mod cpu;
+mod memory;
+
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
 use std::path::PathBuf;
@@ -23,7 +26,7 @@ impl CartridgeType {
     pub fn from_byte(b: u8) -> LoadingResult<CartridgeType> {
         Ok(match b {
             0x0 => CartridgeType::RomOnly,
-            _ => return Err(LoadingError::UnsupportedCartridgeType),
+            _ => return Err(LoadingError::UnsupportedCartridgeType(b)),
         })
     }
 }
@@ -121,7 +124,7 @@ pub enum LoadingError {
     IoError(std::io::Error),
     UnsupportedRomSize,
     UnsupportedRamSize,
-    UnsupportedCartridgeType,
+    UnsupportedCartridgeType(u8),
 }
 
 impl From<std::io::Error> for LoadingError {
