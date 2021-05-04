@@ -40,7 +40,7 @@ fn main() {
     let opts = CliOpts::load();
     let gb = game_boy::GameBoy::load(&opts.rom_path.into()).unwrap();
 
-    println!("Title: {}", gb.meta_data().title());
+    gb.memory().rom().print_meta();
 
     let mut window = GbWindow::new(opts.magnification);
 

@@ -1,3 +1,18 @@
+use crate::game_boy::memory::rom::RomError;
+use std::path::PathBuf;
+
+pub mod rom;
+
+#[derive(Debug)]
+pub enum MemError {
+    RomError(rom::RomError)
+}
+
+impl From<rom::RomError> for MemError {
+    fn from(e: RomError) -> Self {
+        MemError::RomError(e)
+    }
+}
 
 const MEM_SIZE: usize = 0xFFFF;
 
@@ -62,7 +77,23 @@ impl MemRegion {
     }
 }
 
-pub(super) struct Memory {
+#[derive(Debug)]
+pub struct Memory {
     // For now put it on the stack :^) -> it SHOULD be able to handle 64kiB
-    mem: [u8; MEM_SIZE]
+    mem: [u8; MEM_SIZE],
+    rom: rom::Rom
+}
+
+impl Memory {
+    pub fn load_from_path(path: &PathBuf) -> Result<Memory, MemError> {
+        let rom = rom::Rom::load_from_path(path)?;
+        Ok(Memory {
+            mem: [0; MEM_SIZE],
+            rom
+        })
+    }
+
+    pub fn rom(&self) -> &rom::Rom {
+        &self.rom
+    }
 }
