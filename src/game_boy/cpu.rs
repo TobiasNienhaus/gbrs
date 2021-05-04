@@ -1,6 +1,6 @@
 
 pub(super) struct Cpu {
-    a_reg: u8,
+    a_reg: u8, // Accumulator
     b_reg: u8,
     c_reg: u8,
     d_reg: u8,
@@ -10,6 +10,7 @@ pub(super) struct Cpu {
     flag_reg: u8,
     pc: u16,
     sp: u16
+    // There's another 8-bit register -> the location HL point to
 }
 
 impl Cpu {

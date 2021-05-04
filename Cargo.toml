@@ -11,3 +11,4 @@ minifb = "0.19.3"
 # For now for testing
 rand = "0.8.3"
 clap = "2.33.3"
+# https://docs.rs/bitfield/0.13.2/bitfield/macro.bitfield.html

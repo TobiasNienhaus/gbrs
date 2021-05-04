@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 use std::fs::File;
 use std::io::{SeekFrom, Read, Seek};
+use std::convert::TryInto;
 
 #[allow(unused)]
 const NINTENDO_GRAPHIC: [u8; 48] = [
@@ -166,6 +167,19 @@ impl Rom {
             data: bytes
         })
     }
+
+    // TODO handle banks, etc.
+    pub fn read_8(&self, address: u16) -> u8 {
+        self.data[address as usize]
+    }
+
+    // TODO handle banks, etc.
+    pub fn read_16(&self, address: u16) -> u16 {
+        // Doesn't handle any overflows, etc.
+        let a = address as usize;
+        u16::from_le_bytes(self.data[a..a+1].try_into().unwrap())
+    }
+    // TODO write methods??? Don't make sense with ROM
 }
 
 // Debug functions

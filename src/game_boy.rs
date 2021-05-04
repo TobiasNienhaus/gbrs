@@ -17,18 +17,18 @@ impl From<memory::MemError> for GBRSError {
 
 #[derive(Debug)]
 pub struct GameBoy {
-    memory: memory::Memory
+    memory: memory::MMU
 }
 
 impl GameBoy {
     pub fn load(path: &PathBuf) -> Result<GameBoy, GBRSError> {
-        let memory = memory::Memory::load_from_path(path)?;
+        let memory = memory::MMU::load_from_path(path)?;
         Ok(GameBoy {
             memory
         })
     }
 
-    pub fn memory(&self) -> &memory::Memory {
+    pub fn memory(&self) -> &memory::MMU {
         &self.memory
     }
 }
