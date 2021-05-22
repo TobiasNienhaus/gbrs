@@ -64,8 +64,7 @@ impl MemRegion {
             0xFEA0..=0xFEFF => MemRegion::InvalidOam,
             0xFF00..=0xFF7F => MemRegion::IOMemMap,
             0xFF80..=0xFFFE => MemRegion::HRam,
-            0xFFFF => MemRegion::IEReg,
-            // _ => unreachable!("You somehow called a function with a u16 outside of the range of a u16. Congration you done it!")
+            u16::MAX => MemRegion::IEReg, // 0xFFFF is not supported by IntelliJ Rust extension
         }
     }
 
