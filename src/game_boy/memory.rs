@@ -1,7 +1,7 @@
 use crate::game_boy::memory::rom::RomError;
-use std::path::PathBuf;
-use std::ops::Range;
 use std::convert::TryInto;
+use std::ops::Range;
+use std::path::PathBuf;
 
 pub mod rom;
 
@@ -9,7 +9,7 @@ pub mod rom;
 pub enum MemError {
     RomError(rom::RomError),
     InvalidAddressRegion(MemRegion),
-    Invalid2ByteAccess
+    Invalid2ByteAccess,
 }
 
 pub type MemResult<T> = Result<T, MemError>;
@@ -49,7 +49,7 @@ pub enum MemRegion {
     /// High RAM
     HRam,
     /// IE register
-    IEReg
+    IEReg,
 }
 
 impl MemRegion {
@@ -79,14 +79,14 @@ impl MemRegion {
             MemRegion::InvalidOam => 0xFEA0,
             MemRegion::IOMemMap => 0xFF00,
             MemRegion::HRam => 0xFF80,
-            MemRegion::IEReg => 0xFFFF
+            MemRegion::IEReg => 0xFFFF,
         }
     }
 
     pub fn is_region_end(address: u16) -> bool {
         match address {
             0x7FFF | 0x9FFF | 0xBFFF | 0xDFFF | 0xFDFF | 0xFE9F | 0xFEFF | 0xFF7F | 0xFFFE => true,
-            _ => false
+            _ => false,
         }
     }
 
@@ -99,7 +99,7 @@ impl MemRegion {
 pub struct MMU {
     // For now put it on the stack :^) -> it SHOULD be able to handle 64kiB
     mem: [u8; NON_ROM_SIZE],
-    rom: rom::Rom
+    rom: rom::Rom,
 }
 
 impl MMU {
@@ -110,7 +110,7 @@ impl MMU {
         let rom = rom::Rom::load_from_path(path)?;
         Ok(MMU {
             mem: [0; NON_ROM_SIZE],
-            rom
+            rom,
         })
     }
 
@@ -129,7 +129,9 @@ impl MMU {
     // TODO maybe just return bool?
     pub fn write_8(&mut self, address: u16, val: u8) -> MemResult<()> {
         if MMU::ROM_REGION.contains(&address) {
-            Err(MemError::InvalidAddressRegion(MemRegion::get_region(address)))
+            Err(MemError::InvalidAddressRegion(MemRegion::get_region(
+                address,
+            )))
         } else {
             self.mem[address as usize - 0x8000] = val;
             Ok(())
@@ -146,7 +148,7 @@ impl MMU {
                 Ok(self.rom.read_16(address))
             } else {
                 let a = address as usize - 0x8000;
-                Ok(u16::from_le_bytes(self.mem[a..a+1].try_into().unwrap()))
+                Ok(u16::from_le_bytes(self.mem[a..a + 1].try_into().unwrap()))
             }
         }
     }
@@ -155,7 +157,9 @@ impl MMU {
         if MemRegion::is_region_end(address) {
             Err(MemError::Invalid2ByteAccess)
         } else if MMU::ROM_REGION.contains(&address) {
-            Err(MemError::InvalidAddressRegion(MemRegion::get_region(address)))
+            Err(MemError::InvalidAddressRegion(MemRegion::get_region(
+                address,
+            )))
         } else {
             let bytes = val.to_le_bytes();
             self.mem[address as usize] = bytes[0];
