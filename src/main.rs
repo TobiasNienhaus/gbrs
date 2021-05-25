@@ -8,6 +8,20 @@ use crate::window::GbWindow;
 use clap::{App, Arg};
 use rand::Rng;
 
+// Links:
+// Endianness Guide:
+// -> https://pastebin.com/5BEvWb2h
+// -> GB classic is Little Endian
+// https://gbdev.gg8.se/wiki/articles/Main_Page
+// https://mgba-emu.github.io/gbdoc/
+// https://rgbds.gbdev.io/docs/v0.5.0/gbz80.7
+// https://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html
+// http://gameboy.mongenel.com/dmg/asmmemmap.html
+// http://bgb.bircd.org/pandocs.htm
+// https://github.com/gbdev/awesome-gbdev
+// https://ladecadence.net/trastero/listado%20juegos%20gameboy.html
+// https://romhustler.org/roms/gbc/number
+
 struct CliOpts {
     rom_path: String,
     magnification: usize,
