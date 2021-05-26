@@ -377,8 +377,8 @@ impl Cpu<'_> {
 
         // Reset flag register
         *self.f_reg_mut() = 0;
-        *self.zero_bit() = res == 0; // Set if result is zero
-        *self.half_carry_bit() = true; // By definition
+        self.set_zero_bit(res == 0); // Set if result is zero
+        self.set_half_carry_bit(true); // By definition
 
         *self.a_reg_mut() = res;
     }
