@@ -503,4 +503,6 @@ impl Cpu<'_> {
 
         *self.a_reg_mut() = val;
     }
+
+    // Stopped at https://rgbds.gbdev.io/docs/v0.5.1/gbz80.7#DAA
 }
