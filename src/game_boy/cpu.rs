@@ -421,4 +421,13 @@ impl Cpu<'_> {
         // Call address n16, if condition cc is met (see call)
         todo!()
     }
+
+    /// Complement (invert) the carry flag.
+    ///
+    /// 1 cycle
+    fn ccf(&mut self) {
+        self.set_negative_bit(false); // By definition
+        self.set_half_carry_bit(false); // By definition
+        self.set_carry_bit(!self.carry_bit());
+    }
 }
