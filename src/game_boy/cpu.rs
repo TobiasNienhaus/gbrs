@@ -469,4 +469,38 @@ impl Cpu<'_> {
         self.set_negative_bit(true); // By definition
         self.set_half_carry_bit(true); // By definition
     }
+
+    /// Decimal Adjust Accumulator (A register) to get correct BCD representation
+    /// (see https://ehaskins.com/2018-01-30%20Z80%20DAA/)
+    ///
+    /// 1 cycle
+    fn daa(&mut self) {
+        // TODO understand
+        // No idea how this works xD see link above
+        let mut correction: u8 = 0;
+        let mut set_carry = false;
+
+        let mut val = self.a_reg() as i16;
+
+        if self.half_carry_bit() || (!self.negative_bit() && (val & 0xF) > 9) {
+            correction |= 0x6;
+        }
+
+        if self.carry_bit() || (!self.negative_bit() && (val > 0x99)) {
+            correction |= 0x60;
+            set_carry = true;
+        }
+
+        let correction = correction as i16;
+
+        val += if self.negative_bit() { -correction } else { correction };
+
+        let val = (val & 0xFF) as u8; // This should be the same as %= 0xFF
+
+        self.set_half_carry_bit(false);
+        self.set_carry_bit(set_carry);
+        self.set_zero_bit(val == 0);
+
+        *self.a_reg_mut() = val;
+    }
 }
