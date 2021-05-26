@@ -343,14 +343,17 @@ impl Cpu<'_> {
     /// 4 cycles
     fn add_e8_to_sp(&mut self, e8: i8) {
         // https://github.com/aidan-clyens/GBExperience/blob/master/src/cpu/cpu_alu.cpp#L375-L387
-        let res = (self.sp as i32 + e8) as u16; // TODO check out
+        let res = (self.sp as i32 + e8 as i32) as u16; // TODO check out
+
+        // Normal casting doesn't do the correct thing
+        let e8_byte = e8.to_le_bytes()[0];
 
         // Reset flag register
         *self.f_reg_mut() = 0;
         // TODO WTF???
-        self.set_carry_bit((self.sp ^ e8 ^ (result & 0xFFFF)) & 0x100 == 0x100);
+        self.set_carry_bit((self.sp ^ (e8_byte as u16) ^ (res & 0xFFFF)) & 0x100 == 0x100);
         // TODO WTF???
-        self.set_half_carry_bit((self.sp ^ e8 ^ (result & 0xFFFF)) & 0x10 == 0x10)
+        self.set_half_carry_bit((self.sp ^ (e8_byte as u16) ^ (res & 0xFFFF)) & 0x10 == 0x10);
 
         self.sp = res;
     }
@@ -373,7 +376,7 @@ impl Cpu<'_> {
     ///
     /// Either 2
     fn and(&mut self, n8: u8) {
-        let res = self.a_reg() & self.reg(reg);
+        let res = self.a_reg() & n8;
 
         // Reset flag register
         *self.f_reg_mut() = 0;
@@ -450,7 +453,7 @@ impl Cpu<'_> {
     ///
     /// 2 cycles
     fn cp(&mut self, n8: u8) {
-        let a = self.a_reg()();
+        let a = self.a_reg();
         self.set_zero_bit(a == n8); // Result is only zero, if A == n8
         self.set_negative_bit(true);
         // Result of lower nibble would have to borrow
