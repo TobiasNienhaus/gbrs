@@ -430,4 +430,31 @@ impl Cpu<'_> {
         self.set_half_carry_bit(false); // By definition
         self.set_carry_bit(!self.carry_bit());
     }
+
+    /// Subtract the value in reg from A, but only set the flags and don't store the result
+    ///
+    /// 1 cycle
+    fn cp_reg(&mut self, reg: Register8) {
+        self.cp(self.reg(reg));
+    }
+
+    /// Subtract the value of the byte pointed to by HL from A,
+    /// but only set the flags and don't store the result
+    ///
+    /// 2 cycles
+    fn cp_hl(&mut self) {
+        self.cp(self.mmu.read_8(self.read_hl()))
+    }
+
+    /// Subtract n8 from A, but only set the flags and don't store the result
+    ///
+    /// 2 cycles
+    fn cp(&mut self, n8: u8) {
+        let a = self.a_reg()();
+        self.set_zero_bit(a == n8); // Result is only zero, if A == n8
+        self.set_negative_bit(true);
+        // Result of lower nibble would have to borrow
+        self.set_half_carry_bit((n8 & 0xF) > (a & 0xF));
+        self.set_carry_bit(n8 > a); // Result would have to borrow
+    }
 }
