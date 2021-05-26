@@ -354,5 +354,32 @@ impl Cpu<'_> {
 
         self.sp = res;
     }
+
+    /// Calculate the bitwise and between the register and A and store it in A
+    ///
+    /// 1 cycle
+    fn and_reg(&mut self, reg: Register8) {
+        self.and(self.reg(reg));
+    }
+
+    /// Calculate the bitwise and between the byte pointed to by HL and A and store it in A
+    ///
+    /// 2 Cycles
+    fn and_hl(&mut self) {
+        self.and(self.mmu.read_8(self.read_hl()))
+    }
+
+    /// Calculate the bitwise and between the number and A and store it in A
+    ///
+    /// Either 2
+    fn and(&mut self, n8: u8) {
+        let res = self.a_reg() & self.reg(reg);
+
+        // Reset flag register
+        *self.f_reg_mut() = 0;
+        *self.zero_bit() = res == 0; // Set if result is zero
+        *self.half_carry_bit() = true; // By definition
+
+        *self.a_reg_mut() = res;
     }
 }
