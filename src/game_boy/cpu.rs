@@ -338,7 +338,21 @@ impl Cpu<'_> {
         self.write_hl(res);
     }
 
+    /// Add the signed value e8 to SP
+    ///
+    /// 4 cycles
     fn add_e8_to_sp(&mut self, e8: i8) {
-        // TODO stopped at https://rgbds.gbdev.io/docs/v0.5.1/gbz80.7#ADD_SP,e8
+        // https://github.com/aidan-clyens/GBExperience/blob/master/src/cpu/cpu_alu.cpp#L375-L387
+        let res = (self.sp as i32 + e8) as u16; // TODO check out
+
+        // Reset flag register
+        *self.f_reg_mut() = 0;
+        // TODO WTF???
+        self.set_carry_bit((self.sp ^ e8 ^ (result & 0xFFFF)) & 0x100 == 0x100);
+        // TODO WTF???
+        self.set_half_carry_bit((self.sp ^ e8 ^ (result & 0xFFFF)) & 0x10 == 0x10)
+
+        self.sp = res;
+    }
     }
 }
