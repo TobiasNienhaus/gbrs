@@ -457,4 +457,13 @@ impl Cpu<'_> {
         self.set_half_carry_bit((n8 & 0xF) > (a & 0xF));
         self.set_carry_bit(n8 > a); // Result would have to borrow
     }
+
+    /// Complement the Accumulator/A register (A = ~A)
+    ///
+    /// 1 cycle
+    fn cpl(&mut self) {
+        *self.a_reg_mut() = !self.a_reg();
+        self.set_negative_bit(true); // By definition
+        self.set_half_carry_bit(true); // By definition
+    }
 }
