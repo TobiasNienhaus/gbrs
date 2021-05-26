@@ -382,4 +382,31 @@ impl Cpu<'_> {
 
         *self.a_reg_mut() = res;
     }
+
+    /// Check if the specified bit is set in the register.
+    /// The zero flag is set, if the bit was not set.
+    ///
+    /// 2 cycles
+    fn bit_reg(&mut self, reg: Register8, bit: u8) {
+        self.bit(self.reg(reg), bit);
+    }
+
+    /// Check if the specified bit is set in the byte that HL points to.
+    /// The zero flag is set, if the bit was not set.
+    ///
+    /// 3 cycles
+    fn bit_hl(&mut self, bit: u8) {
+        self.bit(self.mmu.read_8(self.read_hl()), bit);
+    }
+
+    /// Test if the specified bit of the byte is set and set the zero flag IF NOT set
+    ///
+    /// This technically doesn't exist for arbitrary bytes in the GB Classic
+    fn bit(&mut self, to_test: u8, bit: u8) {
+        assert!(bit <= 7); // Is an assert necessary?
+        // This somehow doesn't set (or reset) the carry flag
+        self.set_zero_bit(to_test & (1 << bit) == 0);
+        self.set_negative_bit(false); // By definition
+        self.set_half_carry_bit(true); // By definition
+    }
 }
