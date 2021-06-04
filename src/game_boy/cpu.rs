@@ -504,5 +504,28 @@ impl Cpu<'_> {
         *self.a_reg_mut() = val;
     }
 
-    // Stopped at https://rgbds.gbdev.io/docs/v0.5.1/gbz80.7#DAA
+    /// Decrement the value of the specified register by 1
+    ///
+    /// 1 cycle
+    fn dec_reg8(&mut self, reg: Register8) {
+        // TODO I have no idea if this is correct!
+        self.set_half_carry_bit(dbg!(self.reg(reg) & 0xF) == 0);
+        *self.reg_mut(reg) = self.reg(reg) - 1;
+        self.set_zero_bit(self.reg(reg) == 0); // Set flag if result is zero
+        self.set_negative_bit(true); // By specification
+    }
+
+    /// Decrement the value of the byte pointed to by HL by one
+    ///
+    /// 3 cycles
+    fn dec_hl(&mut self) {
+        self.mmu.write_8(self.read_hl(), self.mmu.read_8(self.read_hl()) - 1);
+    }
+
+    /// Decrement the value of the specified 16 bit register
+    ///
+    /// 2 cycles
+    fn dec_reg16(&mut self, reg: Register16) {
+        self.write_reg_16(self.reg_16(reg) - 1, reg);
+    }
 }
