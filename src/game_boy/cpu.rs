@@ -535,4 +535,27 @@ impl Cpu<'_> {
     fn dec_sp(&mut self) {
         self.sp -= 1;
     }
+
+    /// Disable interrupts by clearing the IME flag
+    ///
+    /// 1 cycle
+    fn di(&mut self) {
+        todo!("DI: No idea what flag to clear here");
+    }
+
+    /// Enable interrupts by setting the IME flag.
+    /// Normally only set AFTER the instruction following this one
+    ///
+    /// 1 cycle
+    fn ei(&mut self) {
+        todo!("EI: No idea what flag to set here");
+    }
+
+    /// Halt the CPU and set it in low power mode until an interrupt occurs.
+    /// This one is not implemented yet
+    ///
+    /// - cycles
+    fn halt(&mut self) {
+        todo!("HALT: This one has complicated behavior")
+    }
 }
