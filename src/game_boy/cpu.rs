@@ -571,4 +571,49 @@ impl Cpu<'_> {
     fn halt(&mut self) {
         todo!("HALT: This one has complicated behavior")
     }
+
+    /// Increment the specified register by 1.
+    ///
+    /// 1 cycle
+    fn inc_r8(&mut self, reg: Register8) {
+        // TODO no idea if that is correct
+        self.set_half_carry_bit(dbg!(self.reg(reg) & 0xF) == 0xF);
+        self.set_negative_bit(false); // By definition
+
+        *self.reg_mut(reg) = self.reg(reg) + 1;
+
+        self.set_zero_bit(self.reg(reg) == 0);
+    }
+
+    /// Increment the byte pointed to by HL by 1
+    ///
+    /// 3 cycles
+    fn inc_hl(&mut self) {
+        let hl = self.read_hl();
+        let mut val = self.mmu.read_8(hl);
+        // TODO no idea if this is correct
+        self.set_half_carry_bit(dbg!(val & 0xF) == 0xF);
+        self.set_negative_bit(false); // By definition
+
+        // TODO might need overflowing add
+        val += 1;
+
+        self.set_zero_bit(val == 0);
+        // TODO so far unused MemResult
+        self.mmu.write_8(hl, val);
+    }
+
+    /// Increment the value of the specified 16 bit register by 1
+    ///
+    /// 2 cycles
+    fn inc_r16(&mut self, reg: Register16) {
+        self.write_reg_16(self.reg_16(reg) + 1, reg);
+    }
+
+    /// Increment SP by 1
+    ///
+    /// 2 cycles
+    fn inc_sp(&mut self) {
+        self.sp += 1;
+    }
 }
