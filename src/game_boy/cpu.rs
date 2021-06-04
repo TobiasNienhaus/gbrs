@@ -528,4 +528,11 @@ impl Cpu<'_> {
     fn dec_reg16(&mut self, reg: Register16) {
         self.write_reg_16(self.reg_16(reg) - 1, reg);
     }
+
+    /// Decrement SP by 1
+    ///
+    /// 2 cycles
+    fn dec_sp(&mut self) {
+        self.sp -= 1;
+    }
 }
