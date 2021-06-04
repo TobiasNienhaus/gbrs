@@ -509,6 +509,8 @@ impl Cpu<'_> {
     /// 1 cycle
     fn dec_reg8(&mut self, reg: Register8) {
         // TODO I have no idea if this is correct!
+        // Set the half carry bit if borrowing from bit 4
+        // This is the case if the lower nibble is zero
         self.set_half_carry_bit(dbg!(self.reg(reg) & 0xF) == 0);
         *self.reg_mut(reg) = self.reg(reg) - 1;
         self.set_zero_bit(self.reg(reg) == 0); // Set flag if result is zero
@@ -519,7 +521,18 @@ impl Cpu<'_> {
     ///
     /// 3 cycles
     fn dec_hl(&mut self) {
-        self.mmu.write_8(self.read_hl(), self.mmu.read_8(self.read_hl()) - 1);
+        let hl = self.read_hl();
+        let mut val = self.mmu.read_8(hl);
+
+        // TODO no idea if this is correct
+        // Set the half carry bit if borrowing from bit 4
+        // This is the case if the lower nibble is zero
+        self.set_half_carry_bit(dbg!(val & 0xF) == 0);
+        val -= 1;
+
+        self.set_zero_bit(val == 0);
+        self.set_negative_bit(true); // By definition
+        self.mmu.write_8(hl, val);
     }
 
     /// Decrement the value of the specified 16 bit register
