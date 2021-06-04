@@ -616,4 +616,6 @@ impl Cpu<'_> {
     fn inc_sp(&mut self) {
         self.sp += 1;
     }
+
+    // Stopping point: https://rgbds.gbdev.io/docs/v0.5.1/gbz80.7#INC_SP
 }
