@@ -784,6 +784,13 @@ impl Cpu<'_> {
         *self.reg_mut(to) = self.mmu.read_8(n16);
     }
 
+    /// Load value from specified register into byte pointed to by the specified address
+    ///
+    /// Does not exist on the GB classic
+    fn ld_r8_to_const16addr(&mut self, from: Register8, n16: u16) {
+        self.mmu.write_8(self.sp, self.reg(from));
+    }
+
     /// Load value into register A from byte pointed to by the specified address, provided, the
     /// address is between 0xFF00 and 0xFFFF (both inclusive)
     ///
