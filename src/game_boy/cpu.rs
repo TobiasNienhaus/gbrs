@@ -658,4 +658,29 @@ impl Cpu<'_> {
     fn jp_hl(&mut self) {
         self.pc = self.read_hl();
     }
+
+    /// Jump relative by adding e8 to the address of the instruction FOLLOWING JR.
+    /// `e8 == 0` would be equivalent to no jump
+    ///
+    /// 3 cycles
+    fn jr(&mut self, e8: i8) {
+        if e8 < 0 {
+            let jump = (-e8) as u16;
+            self.pc.overflowing_sub(jump);
+        } else {
+            self.pc.overflowing_add(e8 as u16);
+        }
+    }
+
+    /// Jump relative by adding e8 to the address of the instruction FOLLOWING JR,
+    /// if the condition is met.
+    /// `e8 == 0` would be equivalent to no jump
+    ///
+    /// 3 cycles if condition is met
+    /// 2 cycles if condition is not met
+    fn jr_cc(&mut self, cc: Condition, e8: i8) {
+        if self.check_condition(cc) {
+            self.jr(e8);
+        }
+    }
 }
