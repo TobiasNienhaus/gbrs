@@ -36,6 +36,16 @@ enum Register16 {
     HL
 }
 
+impl Register16 {
+    fn split(&self) -> (Register8, Register8) {
+        match reg {
+            Register16::BC => (Register8::C, Register8::B),
+            Register16::DE => (Register8::E, Register8::D),
+            Register16::HL => (Register8::L, Register8::H)
+        }
+    }
+}
+
 enum Condition {
     ZSet,
     ZNotSet,
@@ -944,11 +954,7 @@ impl Cpu<'_> {
     ///
     /// 3 cycles
     fn pop_r16(&mut self, reg: Register16) {
-        let (low_reg, high_reg) = match reg {
-            Register16::BC => (Register8::C, Register8::B),
-            Register16::DE => (Register8::E, Register8::D),
-            Register16::HL => (Register8::L, Register8::H)
-        };
+        let (low_reg, high_reg) = reg.split();
         self.ld_const16addr_to_r8(self.sp, low_reg);
         self.inc_sp();
         self.ld_const16addr_to_r8(self.sp, high_reg);
