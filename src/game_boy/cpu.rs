@@ -881,5 +881,32 @@ impl Cpu<'_> {
     /// 1 cycle
     fn nop() { }
 
-    // Stopping point: https://rgbds.gbdev.io/docs/v0.5.1/gbz80.7#NOP
+    /// Calculate the bitwise or between register A and the specified register and
+    /// store the result in register A.
+    ///
+    /// 1 cycle
+    fn or_reg(&mut self, reg: Register8) {
+        self.or(self.reg(reg));
+    }
+
+    /// Calculate the bitwise or between register A and the byte pointed to by HL
+    /// and store the result in register A.
+    ///
+    /// 2 cycles
+    fn or_hl(&mut self) {
+        self.or(self.mmu.read_8(self.read_hl()));
+    }
+
+    /// Calculate the bitwise or between register A and the specified byte and
+    /// store the result in register A.
+    ///
+    /// 2 cycles
+    fn or(&mut self, n8: u8) {
+        let res = self.a_reg() | n8;
+        self.set_zero_bit(res == 0);
+        self.set_half_carry_bit(false);
+        self.set_carry_bit(false);
+        self.set_negative_bit(false);
+        *self.a_reg_mut() = res;
+    }
 }
