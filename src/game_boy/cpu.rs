@@ -451,9 +451,11 @@ impl Cpu<'_> {
         todo!();
     }
 
-    fn call_cc(&mut self, n16: u16) {
+    fn call_cc(&mut self, n16: u16, cc: Condition) {
         // Call address n16, if condition cc is met (see call)
-        todo!()
+        if self.check_condition(cc) {
+            self.call(n16);
+        }
     }
 
     /// Complement (invert) the carry flag.
