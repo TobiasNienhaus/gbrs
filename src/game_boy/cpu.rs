@@ -38,7 +38,7 @@ enum Register16 {
 
 impl Register16 {
     fn split(&self) -> (Register8, Register8) {
-        match reg {
+        match self {
             Register16::BC => (Register8::C, Register8::B),
             Register16::DE => (Register8::E, Register8::D),
             Register16::HL => (Register8::L, Register8::H)
@@ -46,7 +46,7 @@ impl Register16 {
     }
 }
 
-enum Condition {
+pub enum Condition {
     ZSet,
     ZNotSet,
     CSet,
