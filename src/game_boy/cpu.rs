@@ -921,4 +921,30 @@ impl Cpu<'_> {
         self.set_negative_bit(false);
         *self.a_reg_mut() = res;
     }
+
+    /// Pop register AF from the stack
+    ///
+    /// 3 cycles
+    fn pop_af(&mut self) {
+        // Flags should automatically be set, by loading this byte
+        self.ld_const16addr_to_r8(self.sp, Register8::F);
+        self.inc_sp();
+        self.ld_const16addr_to_r8(self.sp, Register8::A);
+        self.inc_sp();
+    }
+
+    /// Pop specified register from stack
+    ///
+    /// 3 cycles
+    fn pop_r16(&mut self, reg: Register16) {
+        let (low_reg, high_reg) = match reg {
+            Register16::BC => (self.c_reg_mut(), self.b_reg_mut()),
+            Register16::DE => (self.e_reg_mut(), self.d_reg_mut()),
+            Register16::HL => (self.l_reg_mut(), self.h_reg_mut())
+        };
+        *low_reg = self.mmu.read_8(self.sp);
+        self.inc_sp();
+        *high_reg = self.mmu.read_8(self.sp);
+        self.inc_sp();
+    }
 }
