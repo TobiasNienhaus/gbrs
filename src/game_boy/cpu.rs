@@ -774,7 +774,14 @@ impl Cpu<'_> {
     ///
     /// 4 cycles
     fn ld_const16addr_to_a(&mut self, n16: u16) {
-        *self.a_reg_mut() = self.mmu.read_8(n16);
+        self.ld_const16addr_to_r8(n16, Register8::A);
+    }
+
+    /// Load value into specified register from byte pointed to by the specified address
+    ///
+    /// Does not exist in GB classic
+    fn ld_const16addr_to_r8(&mut self, n16: u16, to: Register8) {
+        *self.reg_mut(to) = self.mmu.read_8(n16);
     }
 
     /// Load value into register A from byte pointed to by the specified address, provided, the
