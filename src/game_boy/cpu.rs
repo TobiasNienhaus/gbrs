@@ -242,6 +242,11 @@ impl Cpu<'_> {
             Condition::CNotSet => !self.carry_bit()
         }
     }
+
+    pub(super) fn set_flags_from_byte(&mut self, byte: u8) {
+        // TODO is this correct?
+        *self.f_reg_mut() = (self.f_reg() & 0xF) | (byte & 0xF0);
+    }
 }
 
 impl Cpu<'_> {
