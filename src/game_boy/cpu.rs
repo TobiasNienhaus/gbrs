@@ -757,4 +757,36 @@ impl Cpu<'_> {
     fn ldh_a_to_ff00_plus_C(&mut self) {
         self.ldh_a_to_const16addr(0xFF00 + self.c_reg() as u16);
     }
+
+    /// Load value into register A from byte pointed to by the specified register
+    ///
+    /// 2 cycles
+    fn ld_r16addr_to_a(&mut self, reg: Register16) {
+        self.ld_const16addr_to_a(self.reg_16(reg));
+    }
+
+    /// Load value into register A from byte pointed to by the specified address
+    ///
+    /// 4 cycles
+    fn ld_const16addr_to_a(&mut self, n16: u16) {
+        *self.a_reg_mut() = self.mmu.read_8(n16);
+    }
+
+    /// Load value into register A from byte pointed to by the specified address, provided, the
+    /// address is between 0xFF00 and 0xFFFF (both inclusive)
+    ///
+    /// 3 cycles
+    fn ldh_const16addr_to_a(&mut self, n16: u16) {
+        // I'm pretty sure this is meant as a guarantee and not as a noop if
+        // the condition is not met
+        assert!(n16 >= 0xFF00u16 && n16 <= 0xFFFFu16);
+        self.ld_const16addr_to_a(n16);
+    }
+
+    /// Load value into register A from the byte at address 0xFF00 + C (register)
+    ///
+    /// 2 cycles
+    fn ldh_ff00_plus_C_to_a(&mut self) {
+        self.ldh_const16addr_to_a(0xFF00 + self.c_reg() as u16);
+    }
 }
