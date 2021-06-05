@@ -683,4 +683,62 @@ impl Cpu<'_> {
             self.jr(e8);
         }
     }
+
+    /// Load (copy) the value from the register on the right to the register on the left.
+    ///
+    /// 1 cycle
+    fn ld_r8_to_r8(&mut self, to: Register8, from: Register8) {
+        self.ld_const8_to_r8(to, self.reg(from));
+    }
+
+    /// Load the constant into the specified register
+    ///
+    /// 2 cycles
+    fn ld_const8_to_r8(&mut self, to: Register8, n8: u8) {
+        *self.reg_mut(to) = n8;
+    }
+
+    /// Load n16 value into specified 16 bit register
+    ///
+    /// 3 cycles
+    fn ld_const16_to_r16(&mut self, to: Register16, n16: u16) {
+        self.write_reg_16(n16, to);
+    }
+
+    /// Store value from specified register into byte pointed to by HL
+    ///
+    /// 2 cycles
+    fn ld_r8_to_hl(&mut self, from: Register8) {
+        self.ld_const8_to_hl(self.reg(from));
+    }
+
+    /// Store the specified byte into the byte pointed to by HL
+    ///
+    /// 3 cycles
+    fn ld_const8_to_hl(&mut self, n8: u8) {
+        self.mmu.write_8(self.read_hl(), n8);
+    }
+
+    /// Store the value pointed to by HL into the specified register
+    ///
+    /// 2 cycles
+    fn ld_hl_to_r8(&mut self, to: Register8) {
+        *self.reg_mut(to) = self.mmu.read_8(self.read_hl());
+    }
+
+    /// Store the value in the A register into the address pointed to by the specified register
+    ///
+    /// 2 cycles
+    fn ld_a_to_r16addr(&mut self, reg: Register16) {
+        self.ld_a_to_const16addr(self.reg_16(reg));
+    }
+
+    /// Store the value in the A register into the byte at the specified address
+    ///
+    /// 4 cycles
+    fn ld_a_to_const16addr(&mut self, n16: u16) {
+        self.mmu.write_8(n16, self.a_reg());
+    }
+
+    // Stop point https://rgbds.gbdev.io/docs/v0.5.1/gbz80.7#LD__n16_,A
 }
