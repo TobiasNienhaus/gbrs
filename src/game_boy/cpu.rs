@@ -36,6 +36,13 @@ enum Register16 {
     HL
 }
 
+enum Condition {
+    ZSet,
+    ZNotSet,
+    CSet,
+    CNotSet
+}
+
 impl Cpu<'_> {
     const A_REG: usize = 0;
     const F_REG: usize = 1;
@@ -225,6 +232,15 @@ impl Cpu<'_> {
 
     pub(super) fn set_negative_bit(&mut self, high: bool) {
         self.set_flag_bit(6, high);
+    }
+
+    pub(super) fn check_condition(&self, cond: Condition) -> bool {
+        match cond {
+            Condition::ZSet => self.zero_bit(),
+            Condition::ZNotSet => !self.zero_bit(),
+            Condition::CSet => self.carry_bit(),
+            Condition::CNotSet => !self.carry_bit()
+        }
     }
 }
 
