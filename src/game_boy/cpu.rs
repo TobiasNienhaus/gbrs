@@ -805,4 +805,20 @@ impl Cpu<'_> {
         self.ld_r8_to_hl(Register8::A);
         self.dec_hl();
     }
+
+    /// Load value into register A from byte pointed to by HL and increment HL
+    ///
+    /// 2 cycles
+    fn ld_hl_to_a_and_inc(&mut self) {
+        self.ld_hl_to_r8(Register8::A);
+        self.inc_hl();
+    }
+
+    /// Load value into register A from byte pointed to by HL and decrement HL
+    ///
+    /// 2 cycles
+    fn ld_hl_to_a_and_dec(&mut self) {
+        self.ld_hl_to_r8(Register8::A);
+        self.dec_hl();
+    }
 }
