@@ -982,4 +982,20 @@ impl Cpu<'_> {
         self.dec_sp();
         self.ld_r8_to_const16addr(low_reg, self.sp);
     }
+
+    /// Set the specified bit of the register to 0
+    ///
+    /// 2 cycles
+    fn res_reg(&mut self, reg: Register8, bit: u8) {
+        *self.reg_mut(reg) &= !(1 << bit);
+    }
+
+    /// Set the specified bit of the byte pointed to by HL to 0
+    ///
+    /// 4 cycles
+    fn res_hl(&mut self, bit: u8) {
+        let mut val = self.mmu.read_8(self.read_hl());
+        val &= !(1 << bit);
+        self.mmu.write_8(self.read_hl(), val);
+    }
 }
