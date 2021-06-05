@@ -960,4 +960,26 @@ impl Cpu<'_> {
         self.ld_const16addr_to_r8(self.sp, high_reg);
         self.inc_sp();
     }
+
+    /// Push register AF into the stack.
+    ///
+    /// 4 cycles
+    fn push_af(&mut self) {
+        self.dec_sp();
+        self.ld_r8_to_const16addr(Register8::A, self.sp);
+        self.dec_sp();
+        // Should automatically handle pushing the flags
+        self.ld_r8_to_const16addr(Register8::F, self.sp);
+    }
+
+    /// Push the specified register into the stack
+    ///
+    /// 4 cycles
+    fn push_r16(&mut self, reg: Register16) {
+        let (low_reg, high_reg) = reg.split();
+        self.dec_sp();
+        self.ld_r8_to_const16addr(high_reg, self.sp);
+        self.dec_sp();
+        self.ld_r8_to_const16addr(low_reg, self.sp);
+    }
 }
