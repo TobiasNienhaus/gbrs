@@ -633,5 +633,29 @@ impl Cpu<'_> {
         self.sp += 1;
     }
 
-    // Stopping point: https://rgbds.gbdev.io/docs/v0.5.1/gbz80.7#INC_SP
+    /// Jump to address n16 by setting PC to n16
+    ///
+    /// 4 cycles
+    fn jp(&mut self, n16: u16) {
+        self.pc = n16;
+    }
+
+    /// Jump to the address n16 by setting PC to n16, if the condition cc is met
+    ///
+    /// 4 taken cycles, 3 untaken cycles
+    /// -> I'm pretty sure this means:
+    ///    - 4 cycles if condition is met
+    ///    - 3 cycles if condition is not met
+    fn jp_cc(&mut self, cc: Condition, n16: u16) {
+        if self.check_condition(cc) {
+            self.pc = n16;
+        }
+    }
+
+    /// Jump to the value of the HL register, effectively setting PC to HL
+    ///
+    /// 1 cycle
+    fn jp_hl(&mut self) {
+        self.pc = self.read_hl();
+    }
 }
