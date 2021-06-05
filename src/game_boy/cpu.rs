@@ -740,5 +740,21 @@ impl Cpu<'_> {
         self.mmu.write_8(n16, self.a_reg());
     }
 
-    // Stop point https://rgbds.gbdev.io/docs/v0.5.1/gbz80.7#LD__n16_,A
+    /// Store the value in the A register into the byte at the specified address, provided
+    /// the address is between 0xFF00 and 0xFFFF (I'm pretty sure both inclusive)
+    ///
+    /// 3 cycles
+    fn ldh_a_to_const16addr(&mut self, n16: u16) {
+        // I'm pretty sure this is meant as a guarantee and not as a noop if
+        // the condition is not met
+        assert!(n16 >= 0xFF00u16 && n16 <= 0xFFFFu16);
+        self.ld_a_to_const16addr(n16);
+    }
+
+    /// Store the value in register A into the byte at address 0xFF00 + C (register)
+    ///
+    /// 2 cycles
+    fn ldh_a_to_ff00_plus_C(&mut self) {
+        self.ldh_a_to_const16addr(0xFF00 + self.c_reg() as u16);
+    }
 }
