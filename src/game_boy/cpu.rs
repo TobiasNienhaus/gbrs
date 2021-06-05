@@ -789,4 +789,20 @@ impl Cpu<'_> {
     fn ldh_ff00_plus_C_to_a(&mut self) {
         self.ldh_const16addr_to_a(0xFF00 + self.c_reg() as u16);
     }
+
+    /// Load value from register A into byte pointed to by HL and increment HL
+    ///
+    /// 2 cycles
+    fn ld_a_to_hl_and_inc(&mut self) {
+        self.ld_r8_to_hl(Register8::A);
+        self.inc_hl();
+    }
+
+    /// Load value from register A into byte pointed to by HL and decrement HL
+    ///
+    /// 2 cycles
+    fn ld_a_to_hl_and_dec(&mut self) {
+        self.ld_r8_to_hl(Register8::A);
+        self.dec_hl();
+    }
 }
