@@ -821,4 +821,58 @@ impl Cpu<'_> {
         self.ld_hl_to_r8(Register8::A);
         self.dec_hl();
     }
+
+    /// Load specified value into SP
+    ///
+    /// 3 cycles
+    fn ld_const16_to_sp(&mut self, n16: u16) {
+        self.sp = n16;
+    }
+
+    /// Store SP & $FF at address n16 and SP >> 8 at address n16 + 1.
+    /// This is a weird one. xD
+    ///
+    /// 5 cycles
+    fn ld_sp_to_const16addr(&mut self, n16: u16) {
+        self.mmu.write_8(n16, (self.sp & 0xFF) as u8);
+        self.mmu.write_8(n16 + 1, (self.sp >> 8) as u8);
+    }
+
+    /// Add the signed value e8 to SP and store the result in HL.
+    ///
+    /// 3 cycles
+    fn ld_sp_plus_e8_to_hl(&mut self, e8: i8) {
+        let res = if e8 < 0 {
+            let add = e8 as u8;
+            let (res, overflow) = self.sp.overflowing_add(add as u16);
+            // TODO check if flags are correctly set
+            self.set_carry_bit((
+                (self.sp & 0xFF) +
+                (add as u16)
+            ) > 0xFF);
+            self.set_half_carry_bit((
+                (self.sp & 0xF) +
+                (add as u16 & 0xF)
+            ) > 0xF);
+            res
+        } else {
+            // I think if the jump is subtracting, the overflow flags are set to zero
+            self.set_half_carry_bit(false);
+            self.set_carry_bit(false);
+            let sub = (-e8) as u16;
+            let (res, _) = self.sp.overflowing_sub(sub);
+            res
+        };
+        self.set_zero_bit(false); // By definition
+        self.set_negative_bit(false); // By definition
+
+        self.write_hl(res);
+    }
+
+    /// Load register HL into SP
+    ///
+    /// 2 cycles
+    fn ld_hl_to_sp(&mut self) {
+        self.sp = self.read_hl();
+    }
 }
