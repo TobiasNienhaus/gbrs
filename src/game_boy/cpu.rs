@@ -998,4 +998,34 @@ impl Cpu<'_> {
         val &= !(1 << bit);
         self.mmu.write_8(self.read_hl(), val);
     }
+
+    /// Return from subroutine. This is basically POP PC, if it had existed.
+    ///
+    /// 4 cycles
+    fn ret(&mut self) {
+        let low_byte = self.mmu.read_8(self.sp);
+        self.inc_sp();
+        let high_byte = self.mmu.read_8(self.sp);
+        self.inc_sp();
+        self.pc = u16::from_le_bytes([low_byte, high_byte]);
+    }
+
+    /// Return from subroutine if condition is met.
+    ///
+    /// 5 cycles if condition is met.
+    /// 2 cycles if condition is not met.
+    fn ret_cc(&mut self, cc: Condition) {
+        if self.check_condition(cc) {
+            self.ret()
+        }
+    }
+
+    /// Enable interrupts and return from subroutine.
+    /// This IMMEDIATELY enables interrupts after the instruction in contrast to EI
+    ///
+    /// 4 cycles
+    fn reti(&mut self) {
+        self.ei();
+        self.ret();
+    }
 }
