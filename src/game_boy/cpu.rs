@@ -875,4 +875,11 @@ impl Cpu<'_> {
     fn ld_hl_to_sp(&mut self) {
         self.sp = self.read_hl();
     }
+
+    /// For completeness
+    ///
+    /// 1 cycle
+    fn nop() { }
+
+    // Stopping point: https://rgbds.gbdev.io/docs/v0.5.1/gbz80.7#NOP
 }
