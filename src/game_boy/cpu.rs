@@ -1018,7 +1018,7 @@ impl Cpu<'_> {
         *self.reg_mut(reg) = self.rl_helper(self.reg(reg));
     }
 
-    /// Rotate the byte pointed to by HL through the carry bit
+    /// Rotate the byte pointed to by HL to the left through the carry bit
     ///
     /// 4 cycles
     fn rl_hl(&mut self) {
@@ -1041,7 +1041,7 @@ impl Cpu<'_> {
         self.set_zero_bit(false); // By definition
     }
 
-    /// A small helper to rotate the specified byte through the carry bit
+    /// A small helper to rotate the specified byte to the left through the carry bit
     fn rl_helper(&mut self, mut n8: u8) -> u8 {
         // Behavior (apparently)
         // Index
