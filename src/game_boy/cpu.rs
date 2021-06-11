@@ -1049,8 +1049,8 @@ impl Cpu<'_> {
         // r
         // r
         // y
-        // C 0 1 2 3 4 5 6 7 -> before
-        // 0 1 2 3 4 5 6 7 C
+        // C 7 6 5 4 3 2 1 0 -> before
+        // 7 6 5 4 3 2 1 0 C -> after
         // Check if the carry bit is set (as u8 for ease of use)
         let carry = if self.carry_bit() { 1u8 } else { 0u8 };
         // Set the carry bit according to the seventh bit of the register
