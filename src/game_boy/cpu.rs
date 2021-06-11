@@ -969,6 +969,19 @@ impl Cpu<'_> {
         self.ld_r8_to_const16addr(low_reg, self.sp);
     }
 
+    /// Push the specified 16 bit value into the stack
+    ///
+    /// This does not exist on the GB classic
+    fn push_n16(&mut self, n16: u16) {
+        let bytes = n16.to_le_bytes();
+        self.dec_sp();
+        // Higher byte first
+        self.ld_const8_to_const16addr(bytes[1], self.sp);
+        self.dec_sp();
+        // Lower byte second
+        self.ld_const8_to_const16addr(bytes[0], self.sp);
+    }
+
     /// Set the specified bit of the register to 0
     ///
     /// 2 cycles
