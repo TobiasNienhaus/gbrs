@@ -1032,7 +1032,8 @@ impl Cpu<'_> {
         );
     }
 
-    /// Rotate the A register through the carry bit. The resulting flags are a bit different.
+    /// Rotate the A register to the left through the carry bit.
+    /// The resulting flags are a bit different.
     ///
     /// 1 cycle
     fn rla(&mut self) {
