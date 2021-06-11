@@ -1035,7 +1035,7 @@ impl Cpu<'_> {
     /// Rotate the A register through the carry bit. The resulting flags are a bit different.
     ///
     /// 1 cycle
-    fn rl_a(&mut self) {
+    fn rla(&mut self) {
         self.rl(Register8::A);
         self.set_zero_bit(false); // By definition
     }
