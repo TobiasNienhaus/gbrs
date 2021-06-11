@@ -58,6 +58,19 @@ pub enum Condition {
     CNotSet
 }
 
+#[derive(Copy, Clone)]
+pub enum ResetVec {
+    // TODO better naming, maybe...
+    Vec1,
+    Vec2,
+    Vec3,
+    Vec4,
+    Vec5,
+    Vec6,
+    Vec7,
+    Vec8
+}
+
 fn check_bit(val: u8, bit: u8) -> bool {
     ((val >> bit) & 0x1) == 0x1
 }
