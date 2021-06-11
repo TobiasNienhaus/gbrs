@@ -1270,4 +1270,21 @@ impl Cpu<'_> {
         self.set_negative_bit(false); // By definition
         n8
     }
+
+    /// Call the address associated with the reset vector. This is faster than a normal call
+    ///
+    /// 4 cycles
+    fn rst(&mut self, vec: ResetVec) {
+        self.push_n16(self.pc);
+        self.pc = match vec {
+            ResetVec::Vec1 => 0x00,
+            ResetVec::Vec2 => 0x08,
+            ResetVec::Vec3 => 0x10,
+            ResetVec::Vec4 => 0x18,
+            ResetVec::Vec5 => 0x20,
+            ResetVec::Vec6 => 0x28,
+            ResetVec::Vec7 => 0x30,
+            ResetVec::Vec8 => 0x38,
+        }
+    }
 }
