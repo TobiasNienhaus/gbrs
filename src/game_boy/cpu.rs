@@ -93,22 +93,6 @@ impl Cpu<'_> {
         }
     }
 
-    fn reg_16(&self, register: Register16) -> u16 {
-        match register {
-            Register16::BC => u16::from_le_bytes([self.b_reg(), self.c_reg()]),
-            Register16::DE => u16::from_le_bytes([self.d_reg(), self.e_reg()]),
-            Register16::HL => u16::from_le_bytes([self.h_reg(), self.l_reg()])
-        }
-    }
-
-    fn write_reg_16(&mut self, val: u16, register: Register16) {
-        match register {
-            Register16::BC => self.write_bc(val),
-            Register16::DE => self.write_de(val),
-            Register16::HL => self.write_hl(val)
-        }
-    }
-
     fn a_reg(&self) -> u8 {
         self.reg(Register8::A)
     }
@@ -173,33 +157,17 @@ impl Cpu<'_> {
         self.reg_mut(Register8::L)
     }
 
-    pub(super) fn write_af(&mut self, val: u16) {
-        let af = val.to_le_bytes();
-        *self.a_reg_mut() = af[0];
-        // prevent writing bits 0-3
-        *self.f_reg_mut() = (af[1] & 0xF0) | (self.f_reg() & 0x0F);
+    fn write_reg16(&mut self, reg: Register16, val: u16) {
+        let (low, high) = reg.split();
+        let bytes = val.to_le_bytes();
+        *self.reg_mut(low) = bytes[0];
+        *self.reg_mut(high) = bytes[1];
     }
 
-    pub(super) fn write_bc(&mut self, val: u16) {
-        let bc = val.to_le_bytes();
-        *self.b_reg_mut() = bc[0];
-        *self.c_reg_mut() = bc[1];
-    }
-
-    pub(super) fn write_de(&mut self, val: u16) {
-        let de = val.to_le_bytes();
-        *self.d_reg_mut() = de[0];
-        *self.e_reg_mut() = de[1];
-    }
-
-    pub(super) fn write_hl(&mut self, val: u16) {
-        let hl = val.to_le_bytes();
-        *self.h_reg_mut() = hl[0];
-        *self.l_reg_mut() = hl[1];
-    }
-
-    fn read_hl(&self) -> u16 {
-        u16::from_le_bytes([self.h_reg(), self.l_reg()])
+    fn reg16(&self, reg: Register16) -> u16 {
+        let (low, high) = reg.split();
+        // TODO check if byte order is correct
+        u16::from_le_bytes([self.reg(low), self.reg(high)])
     }
 }
 
@@ -275,7 +243,7 @@ impl Cpu<'_> {
     ///
     /// 2 cycles
     fn adc_hl(&mut self) {
-        self.adc(self.mmu.read_8(self.read_hl()))
+        self.adc(self.mmu.read_8(self.reg16(Register16::HL)))
     }
 
     /// Add a u8 to A
@@ -314,7 +282,7 @@ impl Cpu<'_> {
     ///
     /// 2 cycles
     fn add_hl(&mut self) {
-        self.add(self.mmu.read_8(self.read_hl()))
+        self.add(self.mmu.read_8(self.reg16(Register16::HL)))
     }
 
     /// Add a u8 to A
@@ -342,7 +310,7 @@ impl Cpu<'_> {
     ///
     /// 2 cycles
     fn add_r16_to_hl(&mut self, reg: Register16) {
-        self.add_n16_to_hl(self.reg_16(reg));
+        self.add_n16_to_hl(self.reg16(reg));
     }
 
     /// Add the value in SP to HL
@@ -356,7 +324,7 @@ impl Cpu<'_> {
     ///
     /// Actually not supported by the GB Classic
     fn add_n16_to_hl(&mut self, n16: u16) {
-        let hl = self.read_hl();
+        let hl = self.reg16(Register16::HL);
         let (res, overflow) = hl.overflowing_add(n16);
 
         let half_overflow = (
@@ -370,7 +338,7 @@ impl Cpu<'_> {
         self.set_half_carry_bit(half_overflow); // See half_overflow
         // zero bit is not set
 
-        self.write_hl(res);
+        self.write_reg16(Register16::HL, res);
     }
 
     /// Add the signed value e8 to SP
@@ -404,7 +372,7 @@ impl Cpu<'_> {
     ///
     /// 2 Cycles
     fn and_hl(&mut self) {
-        self.and(self.mmu.read_8(self.read_hl()))
+        self.and(self.mmu.read_8(self.reg16(Register16::HL)))
     }
 
     /// Calculate the bitwise and between the number and A and store it in A
@@ -434,7 +402,7 @@ impl Cpu<'_> {
     ///
     /// 3 cycles
     fn bit_hl(&mut self, bit: u8) {
-        self.bit(self.mmu.read_8(self.read_hl()), bit);
+        self.bit(self.mmu.read_8(self.reg16(Register16::HL)), bit);
     }
 
     /// Test if the specified bit of the byte is set and set the zero flag IF NOT set
@@ -483,7 +451,7 @@ impl Cpu<'_> {
     ///
     /// 2 cycles
     fn cp_hl(&mut self) {
-        self.cp(self.mmu.read_8(self.read_hl()))
+        self.cp(self.mmu.read_8(self.reg16(Register16::HL)))
     }
 
     /// Subtract n8 from A, but only set the flags and don't store the result
@@ -558,7 +526,7 @@ impl Cpu<'_> {
     ///
     /// 3 cycles
     fn dec_hl(&mut self) {
-        let hl = self.read_hl();
+        let hl = self.reg16(Register16::HL);
         let mut val = self.mmu.read_8(hl);
 
         // TODO no idea if this is correct
@@ -576,7 +544,7 @@ impl Cpu<'_> {
     ///
     /// 2 cycles
     fn dec_reg16(&mut self, reg: Register16) {
-        self.write_reg_16(self.reg_16(reg) - 1, reg);
+        self.write_reg16(reg, self.reg16(reg) - 1);
     }
 
     /// Decrement SP by 1
@@ -626,7 +594,7 @@ impl Cpu<'_> {
     ///
     /// 3 cycles
     fn inc_hl(&mut self) {
-        let hl = self.read_hl();
+        let hl = self.reg16(Register16::HL);
         let mut val = self.mmu.read_8(hl);
         // TODO no idea if this is correct
         self.set_half_carry_bit(dbg!(val & 0xF) == 0xF);
@@ -644,7 +612,7 @@ impl Cpu<'_> {
     ///
     /// 2 cycles
     fn inc_r16(&mut self, reg: Register16) {
-        self.write_reg_16(self.reg_16(reg) + 1, reg);
+        self.write_reg16(reg, self.reg16(reg) + 1);
     }
 
     /// Increment SP by 1
@@ -677,7 +645,7 @@ impl Cpu<'_> {
     ///
     /// 1 cycle
     fn jp_hl(&mut self) {
-        self.pc = self.read_hl();
+        self.pc = self.reg16(Register16::HL);
     }
 
     /// Jump relative by adding e8 to the address of the instruction FOLLOWING JR.
@@ -723,7 +691,7 @@ impl Cpu<'_> {
     ///
     /// 3 cycles
     fn ld_const16_to_r16(&mut self, to: Register16, n16: u16) {
-        self.write_reg_16(n16, to);
+        self.write_reg16(to, n16);
     }
 
     /// Store value from specified register into byte pointed to by HL
@@ -737,21 +705,21 @@ impl Cpu<'_> {
     ///
     /// 3 cycles
     fn ld_const8_to_hl(&mut self, n8: u8) {
-        self.mmu.write_8(self.read_hl(), n8);
+        self.mmu.write_8(self.reg16(Register16::HL), n8);
     }
 
     /// Store the value pointed to by HL into the specified register
     ///
     /// 2 cycles
     fn ld_hl_to_r8(&mut self, to: Register8) {
-        *self.reg_mut(to) = self.mmu.read_8(self.read_hl());
+        *self.reg_mut(to) = self.mmu.read_8(self.reg16(Register16::HL));
     }
 
     /// Store the value in the A register into the address pointed to by the specified register
     ///
     /// 2 cycles
     fn ld_a_to_r16addr(&mut self, reg: Register16) {
-        self.ld_a_to_const16addr(self.reg_16(reg));
+        self.ld_a_to_const16addr(self.reg16(reg));
     }
 
     /// Store the value in the A register into the byte at the specified address
@@ -783,7 +751,7 @@ impl Cpu<'_> {
     ///
     /// 2 cycles
     fn ld_r16addr_to_a(&mut self, reg: Register16) {
-        self.ld_const16addr_to_a(self.reg_16(reg));
+        self.ld_const16addr_to_a(self.reg16(reg));
     }
 
     /// Load value into register A from byte pointed to by the specified address
@@ -901,14 +869,14 @@ impl Cpu<'_> {
         self.set_zero_bit(false); // By definition
         self.set_negative_bit(false); // By definition
 
-        self.write_hl(res);
+        self.write_reg16(Register16::HL, res);
     }
 
     /// Load register HL into SP
     ///
     /// 2 cycles
     fn ld_hl_to_sp(&mut self) {
-        self.sp = self.read_hl();
+        self.sp = self.reg16(Register16::HL);
     }
 
     /// For completeness
@@ -929,7 +897,7 @@ impl Cpu<'_> {
     ///
     /// 2 cycles
     fn or_hl(&mut self) {
-        self.or(self.mmu.read_8(self.read_hl()));
+        self.or(self.mmu.read_8(self.reg16(Register16::HL)));
     }
 
     /// Calculate the bitwise or between register A and the specified byte and
@@ -1000,9 +968,9 @@ impl Cpu<'_> {
     ///
     /// 4 cycles
     fn res_hl(&mut self, bit: u8) {
-        let mut val = self.mmu.read_8(self.read_hl());
+        let mut val = self.mmu.read_8(self.reg16(Register16::HL));
         val &= !(1 << bit);
-        self.mmu.write_8(self.read_hl(), val);
+        self.mmu.write_8(self.reg16(Register16::HL), val);
     }
 
     /// Return from subroutine. This is basically POP PC, if it had existed.
