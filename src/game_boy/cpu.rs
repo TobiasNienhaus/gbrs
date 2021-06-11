@@ -13,8 +13,8 @@ pub(super) struct Cpu<'a> {
     // l_reg: u8,
     pc: u16,
     sp: u16,
-    mmu: &'a mut MMU
-    // There's another 8-bit register -> the location HL point to
+    mmu: &'a mut MMU,
+    interrupts_enabled: bool
 }
 
 #[derive(Copy, Clone)]
@@ -558,7 +558,7 @@ impl Cpu<'_> {
     ///
     /// 1 cycle
     fn di(&mut self) {
-        todo!("DI: No idea what flag to clear here");
+        self.interrupts_enabled = false;
     }
 
     /// Enable interrupts by setting the IME flag.
@@ -566,7 +566,7 @@ impl Cpu<'_> {
     ///
     /// 1 cycle
     fn ei(&mut self) {
-        todo!("EI: No idea what flag to set here");
+        self.interrupts_enabled = true;
     }
 
     /// Halt the CPU and set it in low power mode until an interrupt occurs.
