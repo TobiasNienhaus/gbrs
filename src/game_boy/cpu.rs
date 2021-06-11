@@ -713,7 +713,11 @@ impl Cpu<'_> {
     ///
     /// 3 cycles
     fn ld_const8_to_hl(&mut self, n8: u8) {
-        self.mmu.write_8(self.reg16(Register16::HL), n8);
+        self.ld_const8_to_const16addr(n8, self.reg16(Register16::HL));
+    }
+
+    fn ld_const8_to_const16addr(&mut self, n8: u8, n16: u16) {
+        self.mmu.write_8(n16, n8);
     }
 
     /// Store the value pointed to by HL into the specified register
