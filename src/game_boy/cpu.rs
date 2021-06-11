@@ -421,13 +421,17 @@ impl Cpu<'_> {
         self.set_half_carry_bit(true); // By definition
     }
 
+    // TODO documentation
     fn call(&mut self, n16: u16) {
         // Call address n16. This pushes the address of the instruction after
         // the CALL on the stack, such that RET can pop it later; then,
         // it executes an implicit JP n16.
-        todo!();
+        // TODO check if correct
+        self.push_n16(self.pc);
+        self.pc = n16;
     }
 
+    // TODO documentation
     fn call_cc(&mut self, n16: u16, cc: Condition) {
         // Call address n16, if condition cc is met (see call)
         if self.check_condition(cc) {
