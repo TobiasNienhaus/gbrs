@@ -1287,4 +1287,35 @@ impl Cpu<'_> {
             ResetVec::Vec8 => 0x38,
         }
     }
+
+    /// Subtract the value in the specified register + the carry from the A register
+    ///
+    /// 1 cycle
+    fn sbc_r8(&mut self, reg: Register8) {
+        self.sbc(self.reg(reg));
+    }
+
+    /// Subtract the value in the byte pointed to by HL + the carry from the A register
+    ///
+    /// 2 cycles
+    fn sbc_hl(&mut self) {
+        self.sbc(self.mmu.read_8(self.reg16(Register16::HL)));
+    }
+
+    /// Subtract the byte + the carry from the A register
+    ///
+    /// 2 cycles
+    fn sbc(&mut self, n8: u8) {
+        let carry = if self.carry_bit() { 1u8 } else { 0u8 };
+        let result = self.a_reg() as i16 - n8 as i16 - carry as i16;
+
+        self.set_carry_bit(result < 0);
+        let result = result as u8; // Same behavior as static_cast in C++
+        self.set_half_carry_bit(
+            ((self.a_reg() & 0xF) as i16 - (n8 & 0xF) as i16 - carry as i16) < 0
+        );
+        self.set_negative_bit(true); // By definition
+        self.set_zero_bit(result == 0);
+        *self.a_reg_mut() = result;
+    }
 }
