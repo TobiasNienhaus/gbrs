@@ -58,6 +58,10 @@ pub enum Condition {
     CNotSet
 }
 
+fn check_bit(val: u8, bit: u8) -> bool {
+    ((val >> bit) & 0x1) == 0x1
+}
+
 impl Cpu<'_> {
     const A_REG: usize = 0;
     const F_REG: usize = 1;
