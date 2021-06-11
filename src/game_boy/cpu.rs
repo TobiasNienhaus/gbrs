@@ -1011,5 +1011,59 @@ impl Cpu<'_> {
         self.ret();
     }
 
-    // Stopping point: https://rgbds.gbdev.io/docs/v0.5.1/gbz80.7#RETI
+    /// Rotate the register left through the carry bit
+    ///
+    /// 2 cycles
+    fn rl(&mut self, reg: Register8) {
+        *self.reg_mut(reg) = self.rl_helper(self.reg(reg));
+    }
+
+    /// Rotate the byte pointed to by HL through the carry bit
+    ///
+    /// 4 cycles
+    fn rl_hl(&mut self) {
+        self.mmu.write_8(
+            self.reg16(Register16::HL),
+            self.rl_helper(
+                self.mmu.read_8(
+                    self.reg16(Register::HL)
+                )
+            )
+        );
+    }
+
+    /// Rotate the A register through the carry bit. The resulting flags are a bit different.
+    ///
+    /// 1 cycle
+    fn rl_a(&mut self) {
+        self.rl(Register8::A);
+        self.set_zero_bit(false); // By definition
+    }
+
+    /// A small helper to rotate the specified byte through the carry bit
+    fn rl_helper(&mut self, mut n8: u8) -> u8 {
+        // Behavior (apparently)
+        // Index
+        // C
+        // a
+        // r
+        // r
+        // y
+        // C 0 1 2 3 4 5 6 7 -> before
+        // 0 1 2 3 4 5 6 7 C
+        // Check if the carry bit is set (as u8 for ease of use)
+        let carry = if self.carry_bit() { 1u8 } else { 0u8 };
+        // Set the carry bit according to the seventh bit of the register
+        self.set_carry_bit(check_bit(n8, 7));
+        // Shift the register left by one
+        n8 <<= 1;
+        // OR the carry back in
+        n8 |= carry;
+        if n8 == 0 {
+            self.set_zero_bit(true);
+        }
+        self.set_half_carry_bit(false); // By definition
+        self.set_negative_bit(false); // By definition
+        n8
+    }
 }
