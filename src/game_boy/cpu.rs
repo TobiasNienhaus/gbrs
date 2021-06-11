@@ -771,7 +771,7 @@ impl Cpu<'_> {
     /// Store the value in register A into the byte at address 0xFF00 + C (register)
     ///
     /// 2 cycles
-    fn ldh_a_to_ff00_plus_C(&mut self) {
+    fn ldh_a_to_ff00_plus_c(&mut self) {
         self.ldh_a_to_const16addr(0xFF00 + self.c_reg() as u16);
     }
 
@@ -817,7 +817,7 @@ impl Cpu<'_> {
     /// Load value into register A from the byte at address 0xFF00 + C (register)
     ///
     /// 2 cycles
-    fn ldh_ff00_plus_C_to_a(&mut self) {
+    fn ldh_ff00_plus_c_to_a(&mut self) {
         self.ldh_const16addr_to_a(0xFF00 + self.c_reg() as u16);
     }
 
@@ -875,7 +875,7 @@ impl Cpu<'_> {
     fn ld_sp_plus_e8_to_hl(&mut self, e8: i8) {
         let res = if e8 < 0 {
             let add = e8 as u8;
-            let (res, overflow) = self.sp.overflowing_add(add as u16);
+            let (res, _) = self.sp.overflowing_add(add as u16);
             // TODO check if flags are correctly set
             self.set_carry_bit((
                 (self.sp & 0xFF) +
