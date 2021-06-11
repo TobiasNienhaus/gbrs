@@ -1123,4 +1123,61 @@ impl Cpu<'_> {
         self.set_negative_bit(false); // By definition
         n8
     }
+
+    /// Rotate the specified register to the right through the carry bit
+    ///
+    /// 2 cycles
+    fn rr(&mut self, reg: Register8) {
+        *self.reg_mut(reg) = self.rr_helper(self.reg(reg));
+    }
+
+    /// Rotate the byte pointed to by HL to the right throught the carry bit
+    ///
+    /// 4 cycles
+    fn rr_hl(&mut self) {
+        self.mmu.write_8(
+            self.reg16(Register16::HL),
+            self.rr_helper(
+                self.mmu.read_8(
+                    self.reg16(Register::HL)
+                )
+            )
+        );
+    }
+
+    /// Rotate the A register to the right through the carry bit.
+    /// The resulting flags are a bit different.
+    ///
+    /// 1 cycle
+    fn rra(&mut self) {
+        self.rr(Register8::A);
+        self.set_zero_bit(false); // By definition
+    }
+
+    /// A helper to rotate the specified byte to the right
+    fn rr_helper(&mut self, mut n8: u8) -> u8 {
+        // Behavior (apparently)
+        // Index
+        //                 C
+        //                 a
+        //                 r
+        //                 r
+        //                 y
+        // 7 6 5 4 3 2 1 0 C -> before
+        // C 7 6 5 4 3 2 1 0 -> after
+        // Check if the carry bit is set (as u8 for ease of use)
+        let carry = if self.carry_bit() { 1u8 } else { 0u8 };
+        // Set the carry bit according to the seventh bit of the register
+        self.set_carry_bit(check_bit(n8, 0));
+        // Shift the register left by one
+        n8 >>= 1;
+        // OR the carry back in
+        n8 |= carry << 7;
+        if n8 == 0 {
+            self.set_zero_bit(true);
+        }
+        self.set_half_carry_bit(false); // By definition
+        self.set_negative_bit(false); // By definition
+        n8
+    }
 }
