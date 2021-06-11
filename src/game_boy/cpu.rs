@@ -37,6 +37,10 @@ enum Register16 {
 }
 
 impl Register16 {
+    /// Split the 16 bit register into the low 8 bit register and the high 8 bit register.
+    ///
+    /// This will return a tuple of 8 bit register in this form:
+    /// `(low: Register8, high: Register8)`.
     fn split(&self) -> (Register8, Register8) {
         match self {
             Register16::BC => (Register8::C, Register8::B),
