@@ -1327,4 +1327,21 @@ impl Cpu<'_> {
         self.set_negative_bit(false); // By definition
         self.set_half_carry_bit(false); // By definition
     }
+
+    /// Set the specified bit in the specified register to high
+    ///
+    /// 2 cycles
+    fn set_r8(&mut self, reg: Register8, bit: u8) {
+        // TODO check if set methods work correctly
+        *self.reg_mut(reg) |= 1 << bit;
+    }
+
+    /// Set the specified bit in the byte pointed to by HL to high
+    ///
+    /// 4 cycles
+    fn set_hl(&mut self, bit: u8) {
+        let mut read = self.mmu.read_8(self.reg16(Register16::HL));
+        read |= 1 << bit;
+        self.mmu.write_8(self.reg16(Register16::HL), read);
+    }
 }
