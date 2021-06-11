@@ -1318,4 +1318,13 @@ impl Cpu<'_> {
         self.set_zero_bit(result == 0);
         *self.a_reg_mut() = result;
     }
+
+    /// Set the carry flag
+    ///
+    /// 1 cycle
+    fn scf(&mut self) {
+        self.set_carry_bit(true); // By definition
+        self.set_negative_bit(false); // By definition
+        self.set_half_carry_bit(false); // By definition
+    }
 }
