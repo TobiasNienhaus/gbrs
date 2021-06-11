@@ -800,7 +800,7 @@ impl Cpu<'_> {
     ///
     /// Does not exist on the GB classic
     fn ld_r8_to_const16addr(&mut self, from: Register8, n16: u16) {
-        self.mmu.write_8(self.sp, self.reg(from));
+        self.mmu.write_8(n16, self.reg(from));
     }
 
     /// Load value into register A from byte pointed to by the specified address, provided, the
