@@ -1344,4 +1344,6 @@ impl Cpu<'_> {
         read |= 1 << bit;
         self.mmu.write_8(self.reg16(Register16::HL), read);
     }
+
+    // Stopping point: https://rgbds.gbdev.io/docs/v0.5.1/gbz80.7#SET_u3,_HL_
 }
