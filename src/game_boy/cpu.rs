@@ -14,7 +14,8 @@ pub(super) struct Cpu<'a> {
     pc: u16,
     sp: u16,
     mmu: &'a mut MMU,
-    interrupts_enabled: bool
+    interrupts_enabled: bool,
+    halted: bool
 }
 
 #[derive(Copy, Clone)]
@@ -558,6 +559,7 @@ impl Cpu<'_> {
     ///
     /// 1 cycle
     fn di(&mut self) {
+        // TODO shouldn't this set a bit at some address in memory?
         self.interrupts_enabled = false;
     }
 
@@ -566,6 +568,7 @@ impl Cpu<'_> {
     ///
     /// 1 cycle
     fn ei(&mut self) {
+        // TODO shouldn't this set a bit at some address in memory?
         self.interrupts_enabled = true;
     }
 
@@ -574,7 +577,8 @@ impl Cpu<'_> {
     ///
     /// - cycles
     fn halt(&mut self) {
-        todo!("HALT: This one has complicated behavior")
+        // TODO check if this is the correct behavior
+        self.halted = true;
     }
 
     /// Increment the specified register by 1.
