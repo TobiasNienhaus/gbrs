@@ -1497,4 +1497,31 @@ impl Cpu<'_> {
     fn stop(&mut self) {
         todo!()
     }
+
+    /// Subtract the value in the specified register from the A register
+    ///
+    /// 1 cycle
+    fn sub_r8(&mut self, reg: Register8) {
+        self.sub(self.reg(reg));
+    }
+
+    /// Subtract the value from the byte pointed to by HL from the A register
+    ///
+    /// 2 cycles
+    fn sub_hl(&mut self) {
+        self.sub(self.mmu.read_8(self.reg16(Register16::HL)));
+    }
+
+    /// Subtract the specified value from the A register
+    ///
+    /// 2 cycles
+    fn sub(&mut self, n8: u8) {
+        let a = self.a_reg();
+        self.set_zero_bit(a == n8); // Result is only zero, if A == n8
+        self.set_negative_bit(true); // By definition
+        // Result of lower nibble would have to borrow
+        self.set_half_carry_bit((n8 & 0xF) > (a & 0xF));
+        self.set_carry_bit(n8 > a); // Result would have to borrow
+        *self.reg_mut(Register8::A) = a.overflowing_sub(n8).0;
+    }
 }
