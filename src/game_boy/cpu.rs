@@ -1557,4 +1557,31 @@ impl Cpu<'_> {
         self.set_carry_bit(false); // By definition
         res
     }
+
+    /// Bitwise XOR between the value in r8 and the A register. Store the result in the A
+    /// register.
+    ///
+    /// 1 cycle
+    fn xor_reg(&mut self, reg: Register8) {
+        self.xor(self.reg(reg));
+    }
+
+    /// Bitwise XOR between the byte pointed to by HL and the A register. Store the result in the
+    /// A register.
+    ///
+    /// 2 cycles
+    fn xor_hl(&mut self) {
+        self.xor(self.mmu.read_8(self.reg16(Register16::HL)));
+    }
+
+    /// Bitwise XOR between the value in n8 and the A register. Store the result in the A register.
+    ///
+    /// 2 cycles
+    fn xor(&mut self, n8: u8) {
+        let res = self.reg(Register8::A) ^ n8;
+        self.set_zero_bit(res == 0);
+        self.set_carry_bit(false); // By definition
+        self.set_half_carry_bit(false); // By definition
+        self.set_negative_bit(false); // By definition
+    }
 }
