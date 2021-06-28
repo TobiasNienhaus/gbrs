@@ -3,6 +3,7 @@ use crate::game_boy::memory::MemError;
 
 mod cpu;
 mod memory;
+mod video;
 
 #[derive(Debug)]
 pub enum GBRSError {

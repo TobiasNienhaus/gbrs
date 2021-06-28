@@ -188,7 +188,7 @@ impl Cpu {
             0x73 => self.ld_r8_to_hl(Register8::E),
             0x74 => self.ld_r8_to_hl(Register8::H),
             0x75 => self.ld_r8_to_hl(Register8::L),
-            0x76 => self.halt(),
+            0x76 => self.halt(), // TODO when interrupts are disabled, only skip one instruction
             0x77 => self.ld_r8_to_hl(Register8::A),
             0x78 => self.ld_r8_to_r8(Register8::A, Register8::B),
             0x79 => self.ld_r8_to_r8(Register8::A, Register8::C),
