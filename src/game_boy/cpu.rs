@@ -1,4 +1,6 @@
 mod instructions;
+pub mod callmap;
+pub use callmap::*;
 
 use super::memory::MMU;
 
