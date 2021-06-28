@@ -253,6 +253,25 @@ impl Cpu<'_> {
     }
 
     fn is_running(&self) -> bool {
-        !self.halted && !self.
+        !self.halted && !self.stopped
+    }
+}
+
+impl Cpu<'_> {
+    fn read_u8(&mut self) -> u8 {
+        let ret = self.mmu.read_8(self.pc);
+        self.pc += 1;
+        ret
+    }
+
+    fn read_u16(&mut self) -> u16 {
+        // TODO don't unwrap
+        let ret = self.mmu.read_16(self.pc).unwrap();
+        self.pc += 2;
+        ret
+    }
+
+    fn read_i8(&mut self) -> i8 {
+        i8::from_le_bytes([self.read_u8()])
     }
 }
