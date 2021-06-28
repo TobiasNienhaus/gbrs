@@ -162,7 +162,7 @@ impl Cpu<'_> {
     /// The zero flag is set, if the bit was not set.
     ///
     /// 2 cycles
-    pub(super) fn bit_reg(&mut self, reg: Register8, bit: u8) {
+    pub(super) fn bit_r8(&mut self, reg: Register8, bit: u8) {
         self.bit(self.reg(reg), bit);
     }
 
@@ -316,7 +316,7 @@ impl Cpu<'_> {
     /// Decrement the value of the specified 16 bit register
     ///
     /// 2 cycles
-    pub(super) fn dec_reg16(&mut self, reg: Register16) {
+    pub(super) fn dec_r16(&mut self, reg: Register16) {
         self.write_reg16(reg, self.reg16(reg) - 1);
     }
 
@@ -753,7 +753,7 @@ impl Cpu<'_> {
     /// Set the specified bit of the register to 0
     ///
     /// 2 cycles
-    pub(super) fn res_reg(&mut self, reg: Register8, bit: u8) {
+    pub(super) fn res_r8(&mut self, reg: Register8, bit: u8) {
         *self.reg_mut(reg) &= !(1 << bit);
     }
 
@@ -1091,7 +1091,7 @@ impl Cpu<'_> {
     /// Shift the specified register to the left arithmetically
     ///
     /// 2 cycles
-    pub(super) fn sla_reg(&mut self, reg: Register8) {
+    pub(super) fn sla(&mut self, reg: Register8) {
         *self.reg_mut(reg) = self.sla_helper(self.reg(reg));
     }
 
@@ -1139,7 +1139,7 @@ impl Cpu<'_> {
     /// Shift the specified register to the right arithmetically
     ///
     /// 2 cycles
-    pub(super) fn sra_reg(&mut self, reg: Register8) {
+    pub(super) fn sra(&mut self, reg: Register8) {
         *self.reg_mut(reg) = self.sra_helper(self.reg(reg));
     }
 
@@ -1186,7 +1186,7 @@ impl Cpu<'_> {
     /// Shift specified register to the right logically
     ///
     /// 2 cycles
-    pub(super) fn srl_reg(&mut self, reg: Register8) {
+    pub(super) fn srl(&mut self, reg: Register8) {
         *self.reg_mut(reg) = self.srl_helper(self.reg(reg));
     }
 
@@ -1265,7 +1265,7 @@ impl Cpu<'_> {
     /// Swap the higher and lower 4 bits in the specified register
     ///
     /// 2 cycles
-    pub(super) fn swap_reg(&mut self, reg: Register8) {
+    pub(super) fn swap(&mut self, reg: Register8) {
         *self.reg_mut(reg) = self.swap_helper(self.reg(reg));
     }
 
