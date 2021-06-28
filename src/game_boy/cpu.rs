@@ -1060,7 +1060,7 @@ impl Cpu<'_> {
             self.reg16(Register16::HL),
             self.rl_helper(
                 self.mmu.read_8(
-                    self.reg16(Register::HL)
+                    self.reg16(Register16::HL)
                 )
             )
         );
@@ -1117,7 +1117,7 @@ impl Cpu<'_> {
             self.reg16(Register16::HL),
             self.rlc_helper(
                 self.mmu.read_8(
-                    self.reg16(Register::HL)
+                    self.reg16(Register16::HL)
                 )
             )
         );
@@ -1173,7 +1173,7 @@ impl Cpu<'_> {
             self.reg16(Register16::HL),
             self.rr_helper(
                 self.mmu.read_8(
-                    self.reg16(Register::HL)
+                    self.reg16(Register16::HL)
                 )
             )
         );
@@ -1230,7 +1230,7 @@ impl Cpu<'_> {
             self.reg16(Register16::HL),
             self.rrc_helper(
                 self.mmu.read_8(
-                    self.reg16(Register::HL)
+                    self.reg16(Register16::HL)
                 )
             )
         );
