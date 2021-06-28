@@ -1259,7 +1259,7 @@ impl Cpu<'_> {
         let truncated = if check_bit(n8, 0) { 1u8 } else { 0u8 };
         // Set the carry bit according to the seventh bit of the register
         self.set_carry_bit(truncated != 0);
-        // Shift the register left by one
+        // Shift the register right by one
         n8 >>= 1;
         // OR the carry back in
         n8 |= truncated << 7;
@@ -1345,5 +1345,53 @@ impl Cpu<'_> {
         self.mmu.write_8(self.reg16(Register16::HL), read);
     }
 
-    // Stopping point: https://rgbds.gbdev.io/docs/v0.5.1/gbz80.7#SET_u3,_HL_
+    /// Shift the specified register to the left arithmetically
+    ///
+    /// 2 cycles
+    fn sla_reg(&mut self, reg: Register8) {
+        *self.reg_mut(reg) = self.sla_helper(self.reg(reg));
+    }
+
+    /// Shift the byte pointed to by HL to the left arithmetically
+    ///
+    /// 4 cycles
+    fn sla_hl(&mut self) {
+        self.mmu.write_8(
+            self.reg16(Register16::HL),
+            self.sla_helper(
+                self.mmu.read_8(
+                    self.reg16(Register16::HL)
+                )
+            )
+        );
+    }
+
+    /// A helper for shifting left arithmetically
+    fn sla_helper(&mut self, mut n8: u8) -> u8 {
+        // Behavior (apparently)
+        // Index
+        // C
+        // a
+        // r
+        // r
+        // y
+        // C 7 6 5 4 3 2 1 0 -> before
+        // 7 6 5 4 3 2 1 0 0 -> after
+        // Check if the 0th bit is set.
+        let truncated = if check_bit(n8, 0) { 1u8 } else { 0u8 };
+        // Check if the last bit is set. This will be put into the carry flag
+        let last = if check_bit(n8, 7) { 1u8 } else { 0u8 };
+        // Set the carry bit according to the seventh bit of the register
+        self.set_carry_bit(last != 0);
+        // Shift the register left by one
+        n8 <<= 1;
+        // OR the carry back in
+        n8 |= truncated;
+        if n8 == 0 {
+            self.set_zero_bit(true);
+        }
+        self.set_half_carry_bit(false); // By definition
+        self.set_negative_bit(false); // By definition
+        n8
+    }
 }
