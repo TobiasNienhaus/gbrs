@@ -1394,4 +1394,53 @@ impl Cpu<'_> {
         self.set_negative_bit(false); // By definition
         n8
     }
+
+    /// Shift the specified register to the right arithmetically
+    ///
+    /// 2 cycles
+    fn sra_reg(&mut self, reg: Register8) {
+        *self.reg_mut(reg) = self.sra_helper(self.reg(reg));
+    }
+
+    /// Shift the byte pointed to by HL to the right arithmetically
+    ///
+    /// 4 cycles
+    fn sra_hl(&mut self) {
+        self.mmu.write_8(
+            self.reg16(Register16::HL),
+            self.sra_helper(
+                self.mmu.read_8(
+                    self.reg16(Register16::HL)
+                )
+            )
+        );
+    }
+
+    fn sra_helper(&mut self, mut n8: u8) -> u8 {
+        // Behavior (apparently)
+        // Index
+        //                 C
+        //                 a
+        //                 r
+        //                 r
+        //                 y
+        // 7 6 5 4 3 2 1 0 C -> before
+        // 7 7 6 5 4 3 2 1 0 -> after
+        // Check if the 0th bit is set.
+        let first = if check_bit(n8, 0) { 1u8 } else { 0u8 };
+        // Check if the last bit is set. This will be put into the carry flag
+        let last = if check_bit(n8, 7) { 1u8 } else { 0u8 };
+        // Set the carry bit according to the seventh bit of the register
+        self.set_carry_bit(first != 0);
+        // Shift the register left by one
+        n8 >>= 1;
+        // OR the last digit back in
+        n8 |= last << 7;
+        if n8 == 0 {
+            self.set_zero_bit(true);
+        }
+        self.set_half_carry_bit(false); // By definition
+        self.set_negative_bit(false); // By definition
+        n8
+    }
 }
