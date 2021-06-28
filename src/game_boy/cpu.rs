@@ -1056,14 +1056,12 @@ impl Cpu<'_> {
     ///
     /// 4 cycles
     fn rl_hl(&mut self) {
-        self.mmu.write_8(
-            self.reg16(Register16::HL),
-            self.rl_helper(
-                self.mmu.read_8(
-                    self.reg16(Register16::HL)
-                )
-            )
+        let val = self.mmu.read_8(
+            self.reg16(Register16::HL)
         );
+        let val = self.rl_helper(val);
+        let reg_val = self.reg16(Register16::HL);
+        self.mmu.write_8(reg_val, val);
     }
 
     /// Rotate the A register to the left through the carry bit.
@@ -1113,14 +1111,12 @@ impl Cpu<'_> {
     ///
     /// 4 cycles
     fn rlc_hl(&mut self) {
-        self.mmu.write_8(
-            self.reg16(Register16::HL),
-            self.rlc_helper(
-                self.mmu.read_8(
-                    self.reg16(Register16::HL)
-                )
-            )
+        let val = self.mmu.read_8(
+            self.reg16(Register16::HL)
         );
+        let val = self.rlc_helper(val);
+        let reg_val = self.reg16(Register16::HL);
+        self.mmu.write_8(reg_val, val);
     }
 
     /// Rotate the A register to the left. The resulting flags are a bit different.
@@ -1169,14 +1165,12 @@ impl Cpu<'_> {
     ///
     /// 4 cycles
     fn rr_hl(&mut self) {
-        self.mmu.write_8(
-            self.reg16(Register16::HL),
-            self.rr_helper(
-                self.mmu.read_8(
-                    self.reg16(Register16::HL)
-                )
-            )
+        let val = self.mmu.read_8(
+            self.reg16(Register16::HL)
         );
+        let val = self.rr_helper(val);
+        let reg_val = self.reg16(Register16::HL);
+        self.mmu.write_8(reg_val, val);
     }
 
     /// Rotate the A register to the right through the carry bit.
@@ -1226,14 +1220,12 @@ impl Cpu<'_> {
     ///
     /// 4 cycles
     fn rrc_hl(&mut self) {
-        self.mmu.write_8(
-            self.reg16(Register16::HL),
-            self.rrc_helper(
-                self.mmu.read_8(
-                    self.reg16(Register16::HL)
-                )
-            )
+        let val = self.mmu.read_8(
+            self.reg16(Register16::HL)
         );
+        let val = self.rrc_helper(val);
+        let reg_val = self.reg16(Register16::HL);
+        self.mmu.write_8(reg_val, val);
     }
 
     /// Rotate the A register to the right. The resulting flags are a bit different
@@ -1356,14 +1348,12 @@ impl Cpu<'_> {
     ///
     /// 4 cycles
     fn sla_hl(&mut self) {
-        self.mmu.write_8(
-            self.reg16(Register16::HL),
-            self.sla_helper(
-                self.mmu.read_8(
-                    self.reg16(Register16::HL)
-                )
-            )
+        let val = self.mmu.read_8(
+            self.reg16(Register16::HL)
         );
+        let val = self.sla_helper(val);
+        let reg_val = self.reg16(Register16::HL);
+        self.mmu.write_8(reg_val, val);
     }
 
     /// A helper for shifting left arithmetically
@@ -1406,14 +1396,12 @@ impl Cpu<'_> {
     ///
     /// 4 cycles
     fn sra_hl(&mut self) {
-        self.mmu.write_8(
-            self.reg16(Register16::HL),
-            self.sra_helper(
-                self.mmu.read_8(
-                    self.reg16(Register16::HL)
-                )
-            )
+        let val = self.mmu.read_8(
+            self.reg16(Register16::HL)
         );
+        let val = self.sra_helper(val);
+        let reg_val = self.reg16(Register16::HL);
+        self.mmu.write_8(reg_val, val);
     }
 
     fn sra_helper(&mut self, mut n8: u8) -> u8 {
@@ -1455,14 +1443,12 @@ impl Cpu<'_> {
     ///
     /// 4 cycles
     fn srl_hl(&mut self) {
-        self.mmu.write_8(
-            self.reg16(Register16::HL),
-            self.srl_helper(
-                self.mmu.read_8(
-                    self.reg16(Register16::HL)
-                )
-            )
+        let val = self.mmu.read_8(
+            self.reg16(Register16::HL)
         );
+        let val = self.srl_helper(val);
+        let reg_val = self.reg16(Register16::HL);
+        self.mmu.write_8(reg_val, val);
     }
 
     fn srl_helper(&mut self, mut n8: u8) -> u8 {
@@ -1536,14 +1522,12 @@ impl Cpu<'_> {
     ///
     /// 4 cycles
     fn swap_hl(&mut self) {
-        self.mmu.write_8(
-            self.reg16(Register16::HL),
-            self.swap_helper(
-                self.mmu.read_8(
-                    self.reg16(Register16::HL)
-                )
-            )
+        let val = self.mmu.read_8(
+            self.reg16(Register16::HL)
         );
+        let val = self.swap_helper(val);
+        let reg_val = self.reg16(Register16::HL);
+        self.mmu.write_8(reg_val, val);
     }
 
     /// Swap the lower and higher 4 bits, set flags as expected and return the result
