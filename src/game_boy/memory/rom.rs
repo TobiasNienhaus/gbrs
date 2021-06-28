@@ -177,7 +177,7 @@ impl Rom {
     pub fn read_16(&self, address: u16) -> u16 {
         // Doesn't handle any overflows, etc.
         let a = address as usize;
-        u16::from_le_bytes(self.data[a..a+1].try_into().unwrap())
+        u16::from_le_bytes(self.data[a..a+2].try_into().unwrap())
     }
     // TODO write methods??? Don't make sense with ROM
 }
