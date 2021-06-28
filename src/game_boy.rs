@@ -45,5 +45,42 @@ impl GameBoy {
     pub fn memory(&self) -> &memory::MMU {
         self.cpu.memory()
     }
+
+    pub fn frame(&mut self) {
+        let mut clocks_left = 0;
+        for line in 0..GameBoy::LINES {
+            if line < GameBoy::DRAW_LINES {
+                for clock in 0..GameBoy::CLOCKS_PER_LINE {
+                    // TODO set modes
+                    if clock < GameBoy::OAM_SEARCH_CLOCKS {
+                        // OAM search
+                    } else if clock < GameBoy::PIXEL_TRANSFER_CLOCKS {
+                        // Pixel transfer
+                    } else {
+                        // H-Blank
+                    }
+                    if clocks_left <= 0 {
+                        clocks_left = self.cpu.tick();
+                    } else {
+                        clocks_left -= 1;
+                    }
+                }
+            } else {
+                // V-Blank
+                if clocks_left <= 0 {
+                    clocks_left = self.cpu.tick();
+                } else {
+                    clocks_left -= 1;
+                }
+            }
+        }
+        // Per line:
+        // - 20 clocks OAM search
+        // - 43 clocks Pixel transfer
+        // - 51 clocks H-Blank
+
+        // In total:
+        // - 144 lines
+        // - 10 lines V-Blank
     }
 }

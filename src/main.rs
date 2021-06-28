@@ -53,7 +53,7 @@ impl CliOpts {
 
 fn main() {
     let opts = CliOpts::load();
-    let gb = game_boy::GameBoy::load(&opts.rom_path.into()).unwrap();
+    let mut gb = game_boy::GameBoy::load(&opts.rom_path.into()).unwrap();
 
     gb.memory().rom().print_meta();
 
@@ -64,11 +64,13 @@ fn main() {
     }
 
     while window.is_open() {
-        if window.win().is_key_pressed(Key::Space, KeyRepeat::No) {
+        // if window.win().is_key_pressed(Key::Space, KeyRepeat::No) {
             for i in window.buffer_mut().iter_mut() {
                 *i = rand::thread_rng().gen_range(0..=3);
             }
-        }
+        // }
+
+        gb.frame();
 
         window.display();
     }
