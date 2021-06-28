@@ -1,6 +1,6 @@
 use super::*;
 
-impl Cpu<'_> {
+impl Cpu {
     /// Add the value in <reg> to A plus the carry flag
     ///
     /// Takes 1 cycle
@@ -320,7 +320,7 @@ impl Cpu<'_> {
         // Set the half carry bit if borrowing from bit 4
         // This is the case if the lower nibble is zero
         self.set_half_carry_bit(dbg!(self.reg(reg) & 0xF) == 0);
-        *self.reg_mut(reg) = self.reg(reg) - 1;
+        *self.reg_mut(reg) = self.reg(reg).overflowing_sub(1).0;
         self.set_zero_bit(self.reg(reg) == 0); // Set flag if result is zero
         self.set_negative_bit(true); // By specification
         1
@@ -337,7 +337,7 @@ impl Cpu<'_> {
         // Set the half carry bit if borrowing from bit 4
         // This is the case if the lower nibble is zero
         self.set_half_carry_bit(dbg!(val & 0xF) == 0);
-        val -= 1;
+        val = val.overflowing_sub(1).0;
 
         self.set_zero_bit(val == 0);
         self.set_negative_bit(true); // By definition
