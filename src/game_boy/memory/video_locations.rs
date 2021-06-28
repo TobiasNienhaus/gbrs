@@ -1,0 +1,321 @@
+use super::*;
+use super::super::video::VideoMode;
+
+impl VideoMode {
+    fn to_two_bit(&self) -> u8 {
+        match self {
+            VideoMode::HBlank => 0b00,
+            VideoMode::VBlank => 0b01,
+            VideoMode::OAM => 0b10,
+            VideoMode::PixelTransfer => 0b11,
+        }
+    }
+
+    fn from_two_bit(val: u8) -> VideoMode {
+        match val & 0b11 {
+            0b00 => VideoMode::HBlank,
+            0b01 => VideoMode::VBlank,
+            0b10 => VideoMode::OAM,
+            0b11 => VideoMode::PixelTransfer,
+            _ => unreachable!("Somehow the bitwise and didn't do shit")
+        }
+    }
+}
+
+fn check_bit(byte: u8, bit: u8) -> byte {
+    (byte >> bit) & 0x1 == 0x1
+}
+
+pub enum SpriteSize {
+    Single,
+    Double
+}
+
+pub struct LcdcSettings {
+    display_enabled: bool,
+    window_tile_map_display_select: std::ops::RangeInclusive<u16>,
+    window_enabled: bool,
+    bg_and_window_tile_data_select: std::ops::RangeInclusive<u16>,
+    bg_tile_map_display_select: std::ops::RangeInclusive<u16>,
+    sprite_size: SpriteSize,
+    sprite_display_enabled: bool,
+    background_enabled: bool
+}
+
+impl LcdcSettings {
+    fn from_byte(byte: u8) -> LcdcSettings {
+        LcdcSettings {
+            display_enabled: check_bit(byte, 7),
+            window_tile_map_display_select: if check_bit(byte, 6) {
+                0x9C00..=0x9FFF
+            } else {
+                0x9800..=0x9BFF
+            },
+            window_enabled: check_bit(byte, 5),
+            bg_and_window_tile_data_select: if check_bit(byte, 4) {
+                0x8000..=0x8FFF
+            } else {
+                0x8800..=0x97FF
+            },
+            bg_tile_map_display_select: if check_bit(byte, 3) {
+                0x9C00..=0x9FFF
+            } else {
+                0x9800..=0x9BFF
+            },
+            sprite_size: if check_bit(byte, 2) { SpriteSize::Double } else { SpriteSize::Single },
+            sprite_display_enabled: check_bit(byte, 1),
+            background_enabled: check_bit(byte, 0)
+        }
+    }
+}
+
+impl MMU {
+    const LCDC: u16 = 0xFF40;
+
+    pub fn read_lcdc_settings(&self) -> LcdcSettings {
+        LcdcSettings::from_byte(self.read_8(MMU::LCDC))
+    }
+
+    pub fn display_enabled(&self) -> bool {
+        self.get_lcdc_bit(7)
+    }
+
+    pub fn window_tile_map_display_select(&self) -> std::ops::RangeInclusive<u16> {
+        if self.get_lcdc_bit(6) {
+            0x9C00..=0x9FFF
+        } else {
+            0x9800..=0x9BFF
+        }
+    }
+
+    pub fn window_enabled(&self) -> bool {
+        self.get_lcdc_bit(5)
+    }
+
+    pub fn bg_and_window_tile_data_select(&self) -> std::ops::RangeInclusive<u16> {
+        if self.get_lcdc_bit(4) {
+            0x8000..=0x8FFF
+        } else {
+            0x8800..=0x97FF
+        }
+    }
+
+    pub fn bg_tile_map_display_select(&self) -> std::ops::RangeInclusive<u16> {
+        if self.get_lcdc_bit(3) {
+            0x9C00..=0x9FFF
+        } else {
+            0x9800..=0x9BFF
+        }
+    }
+
+    pub fn sprite_size(&self) -> SpriteSize {
+        if self.get_lcdc_bit(2) {
+            SpriteSize::Double
+        } else {
+            SpriteSize::Single
+        }
+    }
+
+    pub fn sprite_display_enabled(&self) -> bool {
+        self.get_lcdc_bit(1)
+    }
+
+    pub fn background_enabled(&self) -> bool {
+        self.get_lcdc_bit(0)
+    }
+
+    fn set_lcdc_bit(&mut self, bit: u8, high: bool) {
+        let mut val = self.read_8(MMU::LCDC);
+        if high {
+            val |= 1 << bit;
+        } else {
+            val &= !(1 << bit);
+        }
+        self.write_8(MMU::LCDC, val);
+    }
+
+    fn get_lcdc_bit(&self, bit: u8) -> bool {
+        let val = self.read_8(MMU::LCDC);
+        (val >> bit) & 0x1 == 0x1
+    }
+}
+
+impl MMU {
+    const STAT: u16 = 0xFF41;
+
+    pub fn enable_lyc_interrupt(&mut self, high: bool) {
+        self.set_stat_bit(6, high);
+    }
+
+    pub fn get_lyc_interrupt_enabled(&self) -> bool {
+        self.get_stat_bit(6)
+    }
+
+    pub fn enable_oam_interrupt(&mut self, high: bool) {
+        self.set_stat_bit(5, high);
+    }
+
+    pub fn get_oam_interrupt_enabled(&self) -> bool {
+        self.get_stat_bit(5)
+    }
+
+    pub fn enable_vblank_interrupt(&mut self, high: bool) {
+        self.set_stat_bit(4, high);
+    }
+
+    pub fn get_vblank_interrupt_enabled(&self) -> bool {
+        self.get_stat_bit(4)
+    }
+
+    pub fn enable_hblank_interrupt(&mut self, high: bool) {
+        self.set_stat_bit(3, high);
+    }
+
+    pub fn get_hblank_interrupt_enabled(&self) -> bool {
+        self.get_stat_bit(3)
+    }
+
+    pub fn set_coincidence_flag(&mut self, high: bool) {
+        self.set_stat_bit(2, high);
+    }
+
+    pub fn get_coincidence_flag(&self) -> bool {
+        self.get_stat_bit(2)
+    }
+
+    pub fn set_video_mode(&mut self, mode: VideoMode) {
+        let mut val = self.read_8(MMU::STAT);
+        val = (val & 0xFC) | mode.to_two_bit();
+        self.write_8(MMU::STAT, val);
+    }
+
+    pub fn get_video_mode(&self) -> VideoMode {
+        VideoMode::from_two_bit(self.read_8(MMU::STAT) & 0b11)
+    }
+
+    fn set_stat_bit(&mut self, bit: u8, high: bool) {
+        let mut val = self.read_8(MMU::STAT);
+        if high {
+            val |= 1 << bit;
+        } else {
+            val &= !(1 << bit);
+        }
+        self.write_8(MMU::STAT, val);
+    }
+
+    fn get_stat_bit(&self, bit: u8) -> bool {
+        let val = self.read_8(MMU::STAT);
+        (val >> bit) & 0x1 == 0x1
+    }
+}
+
+impl MMU {
+    // Top left position of background map
+    const SCY: u16 = 0xFF42;
+    const SCX: u16 = 0xFF43;
+
+    pub fn set_scy(&mut self, val: u8) {
+        self.write_8(MMU::SCY, val);
+    }
+
+    pub fn read_scy(&self) -> u8 {
+        self.read_8(MMU::SCY)
+    }
+
+    pub fn set_scx(&mut self, val: u8) {
+        self.write_8(MMU::SCX, val);
+    }
+
+    pub fn read_scx(&self) -> u8 {
+        self.read_8(MMU::SCX)
+    }
+
+    /// The index of the current line being drawn (read-only)
+    const LY: u16 = 0xFF44;
+
+    pub fn set_ly(&mut self, val: u8) {
+        self.write_8(MMU::LY, val);
+    }
+
+    pub fn read_ly(&self) -> u8 {
+        self.read_8(MMU::LY)
+    }
+
+    /// Compared to `LY`. If they are similar, the `STAT` register is set and (if enabled)
+    /// an interrupt is sent
+    const LYC: u16 = 0xFF45;
+
+    pub fn set_lyc(&mut self, val: u8) {
+        self.write_8(MMU::LYC, val);
+    }
+
+    pub fn read_lyc(&self) -> u8 {
+        self.read_8(MMU::LYC)
+    }
+
+    /// The Y position of the window area.
+    const WY: u16 = 0xFF4A;
+    /// The X position of the window area. (For some reason minus 7)
+    const WX: u16 = 0xFF4B;
+
+    pub fn set_wy(&mut self, val: u8) {
+        self.write_8(MMU::WY, val);
+    }
+
+    pub fn read_wy(&self) -> u8 {
+        self.read_8(MMU::WY)
+    }
+
+    pub fn set_wx(&mut self, val: u8) {
+        self.write_8(MMU::WX, val);
+    }
+
+    pub fn read_wx(&self) -> u8 {
+        self.read_8(MMU::WX)
+    }
+}
+
+pub struct Palette {
+    mapping: [u8; 4],
+}
+
+impl Palette {
+    fn from_byte(byte: u8) -> Palette {
+        // 0b11000000             -> 6 shifts
+        // 0b00110000 | +2 shifts -> 4 shifts
+        // 0b00001100 | +2 shifts -> 2 shifts
+        // 0b00000011 | +2 shifts -> 0 shifts
+        Palette {
+            mapping: [
+                byte & 0b11,
+                (byte >> 2) & 0b11,
+                (byte >> 4) & 0b11,
+                (byte >> 6) & 0b11
+            ]
+        }
+    }
+
+    pub fn remap(&self, color: u8) -> u8 {
+        self.mapping[color & 0b11]
+    }
+}
+
+impl MMU {
+    const BG_PALETTE: u16 = 0xFF47;
+
+    pub fn bg_palette(&self) -> Palette {
+        Palette::from_byte(self.read_8(MMU::BG_PALETTE))
+    }
+
+    const SPRITE_PALETTE_0: u16 = 0xFF48;
+
+    pub fn sprite_palette_0(&self) -> Palette {
+        Palette::from_byte(self.read_8(MMU::SPRITE_PALETTE_0))
+    }
+
+    const SPRITE_PALETTE_1: u16 = 0xFF49;
+
+    pub fn sprite_palette_1(&self) -> Palette {
+        Palette::from_byte(self.read_8(MMU::SPRITE_PALETTE_1))
+    }
+}
