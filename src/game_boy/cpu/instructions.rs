@@ -4,7 +4,7 @@ impl Cpu<'_> {
     /// Add the value in <reg> to A plus the carry flag
     ///
     /// Takes 1 cycle
-    pub(super) fn adc_reg(&mut self, reg: Register8) {
+    pub(super) fn adc_r8(&mut self, reg: Register8) {
         self.adc(self.reg(reg));
     }
 
@@ -43,7 +43,7 @@ impl Cpu<'_> {
     /// Add the value in the register to A
     ///
     /// 1 cycle
-    pub(super) fn add_reg(&mut self, reg: Register8) {
+    pub(super) fn add_r8(&mut self, reg: Register8) {
         self.add(self.reg(reg));
     }
 
@@ -133,7 +133,7 @@ impl Cpu<'_> {
     /// Calculate the bitwise and between the register and A and store it in A
     ///
     /// 1 cycle
-    pub(super) fn and_reg(&mut self, reg: Register8) {
+    pub(super) fn and_r8(&mut self, reg: Register8) {
         self.and(self.reg(reg));
     }
 
@@ -196,7 +196,7 @@ impl Cpu<'_> {
     }
 
     // TODO documentation
-    pub(super) fn call_cc(&mut self, n16: u16, cc: Condition) {
+    pub(super) fn call_cc(&mut self, cc: Condition, n16: u16) {
         // Call address n16, if condition cc is met (see call)
         if self.check_condition(cc) {
             self.call(n16);
@@ -215,7 +215,7 @@ impl Cpu<'_> {
     /// Subtract the value in reg from A, but only set the flags and don't store the result
     ///
     /// 1 cycle
-    pub(super) fn cp_reg(&mut self, reg: Register8) {
+    pub(super) fn cp_r8(&mut self, reg: Register8) {
         self.cp(self.reg(reg));
     }
 
@@ -285,7 +285,7 @@ impl Cpu<'_> {
     /// Decrement the value of the specified register by 1
     ///
     /// 1 cycle
-    pub(super) fn dec_reg8(&mut self, reg: Register8) {
+    pub(super) fn dec_r8(&mut self, reg: Register8) {
         // TODO I have no idea if this is correct!
         // Set the half carry bit if borrowing from bit 4
         // This is the case if the lower nibble is zero
@@ -662,13 +662,13 @@ impl Cpu<'_> {
     /// For completeness
     ///
     /// 1 cycle
-    pub(super) fn nop() { }
+    pub(super) fn nop(&self) { }
 
     /// Calculate the bitwise or between register A and the specified register and
     /// store the result in register A.
     ///
     /// 1 cycle
-    pub(super) fn or_reg(&mut self, reg: Register8) {
+    pub(super) fn or_r8(&mut self, reg: Register8) {
         self.or(self.reg(reg));
     }
 
@@ -1297,7 +1297,7 @@ impl Cpu<'_> {
     /// register.
     ///
     /// 1 cycle
-    pub(super) fn xor_reg(&mut self, reg: Register8) {
+    pub(super) fn xor_r8(&mut self, reg: Register8) {
         self.xor(self.reg(reg));
     }
 
