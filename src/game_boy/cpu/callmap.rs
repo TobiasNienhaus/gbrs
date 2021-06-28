@@ -6,7 +6,7 @@ impl Cpu<'_> {
     pub fn handle_instructions(&mut self) {
         let instruction: u8 = todo!();
 
-        match instruction {
+        let cycle_count = match instruction {
             0x00 => self.nop(),
             0x01 => self.ld_const16_to_r16(Register16::BC, todo!("Needs const 16 bit value")),
             0x02 => self.ld_a_to_r16addr(Register16::BC),
@@ -24,9 +24,9 @@ impl Cpu<'_> {
             0x0E => self.ld_const8_to_r8(Register8::C, todo!("Needs const 8 bit value")),
             0x0F => self.rrca(),
             0x10 => {
-                self.stop();
+                self.stop()
                 // TODO I think this also has to pop off the next byte of the memory
-                // -> increase call stack twice maybe?
+                // -> increase program counter twice maybe?
             }
             0x11 => self.ld_const16_to_r16(Register16::DE, todo!("Needs const 16 bit value")),
             0x12 => self.ld_a_to_r16addr(Register16::DE),
@@ -213,7 +213,7 @@ impl Cpu<'_> {
             0xC7 => self.rst(ResetVec::Vec1),
             0xC8 => self.ret_cc(Condition::ZSet),
             0xCA => self.ret(),
-            0xCB => todo!("Implement prefixed operations"),
+            0xCB => self.execute_cb(),
             0xCC => self.call_cc(Condition::ZSet, todo!("Needs const 16 bit address")),
             0xCD => self.call(todo!("Needs const 16 bit address")),
             0xCE => self.adc(todo!("Needs const 8 bit value")),
@@ -256,13 +256,13 @@ impl Cpu<'_> {
             0xFE => self.cp(todo!("Needs const 8 bit value")),
             0xFF => self.rst(ResetVec::Vec8),
             _ => unreachable!("{:#04X} is not a valid instruction code", instruction)
-        }
+        };
     }
 
-    fn execute_cb(&mut self) {
+    fn execute_cb(&mut self) -> u32 {
         let instruction: u8 = todo!();
 
-        match instruction {
+        let cycle_count = match instruction {
             0x00 => self.rlc(Register8::B),
             0x01 => self.rlc(Register8::C),
             0x02 => self.rlc(Register8::D),
@@ -520,6 +520,7 @@ impl Cpu<'_> {
             0xFE => self.set_hl(7),
             0xFF => self.set_r8(Register8::A, 7),
             _ => unreachable!("{:#04X} is not a valid CB instruction code", instruction)
-        }
+        };
+        cycle_count
     }
 }
