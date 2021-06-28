@@ -26,7 +26,7 @@ impl Cpu {
     pub fn new(mmu: MMU) -> Cpu {
         Cpu {
             registers: [0u8; 8],
-            pc: 0,
+            pc: 0x0100,
             sp: 0,
             mmu,
             interrupts_enabled: false,
