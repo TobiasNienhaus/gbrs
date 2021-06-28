@@ -4,7 +4,7 @@ pub use callmap::*;
 
 use super::memory::MMU;
 
-pub(super) struct Cpu<'a> {
+pub(super) struct Cpu {
     registers: [u8;8],
     // a_reg: u8, // Accumulator
     // flag_reg: u8,
@@ -16,10 +16,32 @@ pub(super) struct Cpu<'a> {
     // l_reg: u8,
     pc: u16,
     sp: u16,
-    mmu: &'a mut MMU,
+    mmu: MMU,
     interrupts_enabled: bool,
     halted: bool,
     stopped: bool,
+}
+
+impl Cpu {
+    pub fn new(mmu: MMU) -> Cpu {
+        Cpu {
+            registers: [0u8; 8],
+            pc: 0,
+            sp: 0,
+            mmu,
+            interrupts_enabled: false,
+            halted: false,
+            stopped: false
+        }
+    }
+
+    pub fn memory(&self) -> &MMU {
+        &self.mmu
+    }
+
+    pub fn memory_mut(&mut self) -> &mut MMU {
+        &mut self.mmu
+    }
 }
 
 #[derive(Copy, Clone)]
@@ -79,7 +101,7 @@ fn check_bit(val: u8, bit: u8) -> bool {
     ((val >> bit) & 0x1) == 0x1
 }
 
-impl Cpu<'_> {
+impl Cpu {
     const A_REG: usize = 0;
     const F_REG: usize = 1;
     const B_REG: usize = 2;
@@ -193,7 +215,7 @@ impl Cpu<'_> {
     }
 }
 
-impl Cpu<'_> {
+impl Cpu {
     fn set_flag_bit(&mut self, bit: u8, high: bool) {
         if high {
             *self.f_reg_mut() |= 1 << bit;
@@ -257,7 +279,7 @@ impl Cpu<'_> {
     }
 }
 
-impl Cpu<'_> {
+impl Cpu {
     fn read_u8(&mut self) -> u8 {
         let ret = self.mmu.read_8(self.pc);
         self.pc += 1;
