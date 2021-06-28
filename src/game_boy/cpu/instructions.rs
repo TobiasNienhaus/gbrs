@@ -1232,7 +1232,7 @@ impl Cpu<'_> {
     ///
     /// - cycles
     pub(super) fn stop(&mut self) {
-        todo!()
+        self.stopped = true;
     }
 
     /// Subtract the value in the specified register from the A register

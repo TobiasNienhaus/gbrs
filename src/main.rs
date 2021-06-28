@@ -21,6 +21,7 @@ use rand::Rng;
 // https://github.com/gbdev/awesome-gbdev
 // https://ladecadence.net/trastero/listado%20juegos%20gameboy.html
 // https://romhustler.org/roms/gbc/number
+// https://github.com/aidan-clyens/GBExperience
 
 struct CliOpts {
     rom_path: String,

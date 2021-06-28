@@ -18,7 +18,8 @@ pub(super) struct Cpu<'a> {
     sp: u16,
     mmu: &'a mut MMU,
     interrupts_enabled: bool,
-    halted: bool
+    halted: bool,
+    stopped: bool,
 }
 
 #[derive(Copy, Clone)]
@@ -249,5 +250,9 @@ impl Cpu<'_> {
     pub(super) fn set_flags_from_byte(&mut self, byte: u8) {
         // TODO is this correct?
         *self.f_reg_mut() = (self.f_reg() & 0xF) | (byte & 0xF0);
+    }
+
+    fn is_running(&self) -> bool {
+        !self.halted && !self.
     }
 }
