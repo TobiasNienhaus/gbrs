@@ -1524,4 +1524,37 @@ impl Cpu<'_> {
         self.set_carry_bit(n8 > a); // Result would have to borrow
         *self.reg_mut(Register8::A) = a.overflowing_sub(n8).0;
     }
+
+    /// Swap the higher and lower 4 bits in the specified register
+    ///
+    /// 2 cycles
+    fn swap_reg(&mut self, reg: Register8) {
+        *self.reg_mut(reg) = self.swap_helper(self.reg(reg));
+    }
+
+    /// Swap the higher and lower 4 bits in the byte pointed to by HL
+    ///
+    /// 4 cycles
+    fn swap_hl(&mut self) {
+        self.mmu.write_8(
+            self.reg16(Register16::HL),
+            self.swap_helper(
+                self.mmu.read_8(
+                    self.reg16(Register16::HL)
+                )
+            )
+        );
+    }
+
+    /// Swap the lower and higher 4 bits, set flags as expected and return the result
+    fn swap_helper(&mut self, n8: u8) -> u8 {
+        let lower = n8 & 0x0F;
+        let higher = n8 & 0xF0;
+        let res = (lower << 4) | (higher >> 4);
+        self.set_zero_bit(res == 0);
+        self.set_negative_bit(false); // By definition
+        self.set_half_carry_bit(false); // By definition
+        self.set_carry_bit(false); // By definition
+        res
+    }
 }
