@@ -4,21 +4,21 @@ impl Cpu<'_> {
     /// Add the value in <reg> to A plus the carry flag
     ///
     /// Takes 1 cycle
-    fn adc_reg(&mut self, reg: Register8) {
+    pub(super) fn adc_reg(&mut self, reg: Register8) {
         self.adc(self.reg(reg));
     }
 
     /// Add the value that HL points to to A plus the carry flag
     ///
     /// 2 cycles
-    fn adc_hl(&mut self) {
+    pub(super) fn adc_hl(&mut self) {
         self.adc(self.mmu.read_8(self.reg16(Register16::HL)))
     }
 
     /// Add a u8 to A
     ///
     /// 2 cycles
-    fn adc(&mut self, n8: u8) {
+    pub(super) fn adc(&mut self, n8: u8) {
         let (temp, overflow) = n8
             .overflowing_add(self.carry_bit() as u8);
         let (res, overflow2) = self.a_reg()
@@ -43,21 +43,21 @@ impl Cpu<'_> {
     /// Add the value in the register to A
     ///
     /// 1 cycle
-    fn add_reg(&mut self, reg: Register8) {
+    pub(super) fn add_reg(&mut self, reg: Register8) {
         self.add(self.reg(reg));
     }
 
     /// Add the value HL points to to A
     ///
     /// 2 cycles
-    fn add_hl(&mut self) {
+    pub(super) fn add_hl(&mut self) {
         self.add(self.mmu.read_8(self.reg16(Register16::HL)))
     }
 
     /// Add a u8 to A
     ///
     /// 2 cycles
-    fn add(&mut self, n8: u8) {
+    pub(super) fn add(&mut self, n8: u8) {
         let (res, overflow) = self.a_reg()
             .overflowing_add(n8);
 
@@ -78,21 +78,21 @@ impl Cpu<'_> {
     /// Add a 16 bit register to HL
     ///
     /// 2 cycles
-    fn add_r16_to_hl(&mut self, reg: Register16) {
+    pub(super) fn add_r16_to_hl(&mut self, reg: Register16) {
         self.add_n16_to_hl(self.reg16(reg));
     }
 
     /// Add the value in SP to HL
     ///
     /// 2 cycles
-    fn add_sp_to_hl(&mut self) {
+    pub(super) fn add_sp_to_hl(&mut self) {
         self.add_n16_to_hl(self.sp);
     }
 
     /// Add a u16 to HL
     ///
     /// Actually not supported by the GB Classic
-    fn add_n16_to_hl(&mut self, n16: u16) {
+    pub(super) fn add_n16_to_hl(&mut self, n16: u16) {
         let hl = self.reg16(Register16::HL);
         let (res, overflow) = hl.overflowing_add(n16);
 
@@ -113,7 +113,7 @@ impl Cpu<'_> {
     /// Add the signed value e8 to SP
     ///
     /// 4 cycles
-    fn add_e8_to_sp(&mut self, e8: i8) {
+    pub(super) fn add_e8_to_sp(&mut self, e8: i8) {
         // https://github.com/aidan-clyens/GBExperience/blob/master/src/cpu/cpu_alu.cpp#L375-L387
         let res = (self.sp as i32 + e8 as i32) as u16; // TODO check out
 
@@ -133,21 +133,21 @@ impl Cpu<'_> {
     /// Calculate the bitwise and between the register and A and store it in A
     ///
     /// 1 cycle
-    fn and_reg(&mut self, reg: Register8) {
+    pub(super) fn and_reg(&mut self, reg: Register8) {
         self.and(self.reg(reg));
     }
 
     /// Calculate the bitwise and between the byte pointed to by HL and A and store it in A
     ///
     /// 2 Cycles
-    fn and_hl(&mut self) {
+    pub(super) fn and_hl(&mut self) {
         self.and(self.mmu.read_8(self.reg16(Register16::HL)))
     }
 
     /// Calculate the bitwise and between the number and A and store it in A
     ///
     /// Either 2
-    fn and(&mut self, n8: u8) {
+    pub(super) fn and(&mut self, n8: u8) {
         let res = self.a_reg() & n8;
 
         // Reset flag register
@@ -162,7 +162,7 @@ impl Cpu<'_> {
     /// The zero flag is set, if the bit was not set.
     ///
     /// 2 cycles
-    fn bit_reg(&mut self, reg: Register8, bit: u8) {
+    pub(super) fn bit_reg(&mut self, reg: Register8, bit: u8) {
         self.bit(self.reg(reg), bit);
     }
 
@@ -170,14 +170,14 @@ impl Cpu<'_> {
     /// The zero flag is set, if the bit was not set.
     ///
     /// 3 cycles
-    fn bit_hl(&mut self, bit: u8) {
+    pub(super) fn bit_hl(&mut self, bit: u8) {
         self.bit(self.mmu.read_8(self.reg16(Register16::HL)), bit);
     }
 
     /// Test if the specified bit of the byte is set and set the zero flag IF NOT set
     ///
     /// This technically doesn't exist for arbitrary bytes in the GB Classic
-    fn bit(&mut self, to_test: u8, bit: u8) {
+    pub(super) fn bit(&mut self, to_test: u8, bit: u8) {
         assert!(bit <= 7); // Is an assert necessary?
         // This somehow doesn't set (or reset) the carry flag
         self.set_zero_bit(to_test & (1 << bit) == 0);
@@ -186,7 +186,7 @@ impl Cpu<'_> {
     }
 
     // TODO documentation
-    fn call(&mut self, n16: u16) {
+    pub(super) fn call(&mut self, n16: u16) {
         // Call address n16. This pushes the address of the instruction after
         // the CALL on the stack, such that RET can pop it later; then,
         // it executes an implicit JP n16.
@@ -196,7 +196,7 @@ impl Cpu<'_> {
     }
 
     // TODO documentation
-    fn call_cc(&mut self, n16: u16, cc: Condition) {
+    pub(super) fn call_cc(&mut self, n16: u16, cc: Condition) {
         // Call address n16, if condition cc is met (see call)
         if self.check_condition(cc) {
             self.call(n16);
@@ -206,7 +206,7 @@ impl Cpu<'_> {
     /// Complement (invert) the carry flag.
     ///
     /// 1 cycle
-    fn ccf(&mut self) {
+    pub(super) fn ccf(&mut self) {
         self.set_negative_bit(false); // By definition
         self.set_half_carry_bit(false); // By definition
         self.set_carry_bit(!self.carry_bit());
@@ -215,7 +215,7 @@ impl Cpu<'_> {
     /// Subtract the value in reg from A, but only set the flags and don't store the result
     ///
     /// 1 cycle
-    fn cp_reg(&mut self, reg: Register8) {
+    pub(super) fn cp_reg(&mut self, reg: Register8) {
         self.cp(self.reg(reg));
     }
 
@@ -223,14 +223,14 @@ impl Cpu<'_> {
     /// but only set the flags and don't store the result
     ///
     /// 2 cycles
-    fn cp_hl(&mut self) {
+    pub(super) fn cp_hl(&mut self) {
         self.cp(self.mmu.read_8(self.reg16(Register16::HL)))
     }
 
     /// Subtract n8 from A, but only set the flags and don't store the result
     ///
     /// 2 cycles
-    fn cp(&mut self, n8: u8) {
+    pub(super) fn cp(&mut self, n8: u8) {
         let a = self.a_reg();
         self.set_zero_bit(a == n8); // Result is only zero, if A == n8
         self.set_negative_bit(true);
@@ -242,7 +242,7 @@ impl Cpu<'_> {
     /// Complement the Accumulator/A register (A = ~A)
     ///
     /// 1 cycle
-    fn cpl(&mut self) {
+    pub(super) fn cpl(&mut self) {
         *self.a_reg_mut() = !self.a_reg();
         self.set_negative_bit(true); // By definition
         self.set_half_carry_bit(true); // By definition
@@ -252,7 +252,7 @@ impl Cpu<'_> {
     /// (see https://ehaskins.com/2018-01-30%20Z80%20DAA/)
     ///
     /// 1 cycle
-    fn daa(&mut self) {
+    pub(super) fn daa(&mut self) {
         // TODO understand
         // No idea how this works xD see link above
         let mut correction: u8 = 0;
@@ -285,7 +285,7 @@ impl Cpu<'_> {
     /// Decrement the value of the specified register by 1
     ///
     /// 1 cycle
-    fn dec_reg8(&mut self, reg: Register8) {
+    pub(super) fn dec_reg8(&mut self, reg: Register8) {
         // TODO I have no idea if this is correct!
         // Set the half carry bit if borrowing from bit 4
         // This is the case if the lower nibble is zero
@@ -298,7 +298,7 @@ impl Cpu<'_> {
     /// Decrement the value of the byte pointed to by HL by one
     ///
     /// 3 cycles
-    fn dec_hl(&mut self) {
+    pub(super) fn dec_hl(&mut self) {
         let hl = self.reg16(Register16::HL);
         let mut val = self.mmu.read_8(hl);
 
@@ -316,21 +316,21 @@ impl Cpu<'_> {
     /// Decrement the value of the specified 16 bit register
     ///
     /// 2 cycles
-    fn dec_reg16(&mut self, reg: Register16) {
+    pub(super) fn dec_reg16(&mut self, reg: Register16) {
         self.write_reg16(reg, self.reg16(reg) - 1);
     }
 
     /// Decrement SP by 1
     ///
     /// 2 cycles
-    fn dec_sp(&mut self) {
+    pub(super) fn dec_sp(&mut self) {
         self.sp -= 1;
     }
 
     /// Disable interrupts by clearing the IME flag
     ///
     /// 1 cycle
-    fn di(&mut self) {
+    pub(super) fn di(&mut self) {
         // TODO shouldn't this set a bit at some address in memory?
         self.interrupts_enabled = false;
     }
@@ -339,7 +339,7 @@ impl Cpu<'_> {
     /// Normally only set AFTER the instruction following this one
     ///
     /// 1 cycle
-    fn ei(&mut self) {
+    pub(super) fn ei(&mut self) {
         // TODO shouldn't this set a bit at some address in memory?
         self.interrupts_enabled = true;
     }
@@ -348,7 +348,7 @@ impl Cpu<'_> {
     /// This one is not implemented yet
     ///
     /// - cycles
-    fn halt(&mut self) {
+    pub(super) fn halt(&mut self) {
         // TODO check if this is the correct behavior
         self.halted = true;
     }
@@ -356,7 +356,7 @@ impl Cpu<'_> {
     /// Increment the specified register by 1.
     ///
     /// 1 cycle
-    fn inc_r8(&mut self, reg: Register8) {
+    pub(super) fn inc_r8(&mut self, reg: Register8) {
         // TODO no idea if that is correct
         self.set_half_carry_bit(dbg!(self.reg(reg) & 0xF) == 0xF);
         self.set_negative_bit(false); // By definition
@@ -369,7 +369,7 @@ impl Cpu<'_> {
     /// Increment the byte pointed to by HL by 1
     ///
     /// 3 cycles
-    fn inc_hl(&mut self) {
+    pub(super) fn inc_hl(&mut self) {
         let hl = self.reg16(Register16::HL);
         let mut val = self.mmu.read_8(hl);
         // TODO no idea if this is correct
@@ -387,21 +387,21 @@ impl Cpu<'_> {
     /// Increment the value of the specified 16 bit register by 1
     ///
     /// 2 cycles
-    fn inc_r16(&mut self, reg: Register16) {
+    pub(super) fn inc_r16(&mut self, reg: Register16) {
         self.write_reg16(reg, self.reg16(reg) + 1);
     }
 
     /// Increment SP by 1
     ///
     /// 2 cycles
-    fn inc_sp(&mut self) {
+    pub(super) fn inc_sp(&mut self) {
         self.sp += 1;
     }
 
     /// Jump to address n16 by setting PC to n16
     ///
     /// 4 cycles
-    fn jp(&mut self, n16: u16) {
+    pub(super) fn jp(&mut self, n16: u16) {
         self.pc = n16;
     }
 
@@ -411,7 +411,7 @@ impl Cpu<'_> {
     /// -> I'm pretty sure this means:
     ///    - 4 cycles if condition is met
     ///    - 3 cycles if condition is not met
-    fn jp_cc(&mut self, cc: Condition, n16: u16) {
+    pub(super) fn jp_cc(&mut self, cc: Condition, n16: u16) {
         if self.check_condition(cc) {
             self.pc = n16;
         }
@@ -420,7 +420,7 @@ impl Cpu<'_> {
     /// Jump to the value of the HL register, effectively setting PC to HL
     ///
     /// 1 cycle
-    fn jp_hl(&mut self) {
+    pub(super) fn jp_hl(&mut self) {
         self.pc = self.reg16(Register16::HL);
     }
 
@@ -428,7 +428,7 @@ impl Cpu<'_> {
     /// `e8 == 0` would be equivalent to no jump
     ///
     /// 3 cycles
-    fn jr(&mut self, e8: i8) {
+    pub(super) fn jr(&mut self, e8: i8) {
         if e8 < 0 {
             let jump = (-e8) as u16;
             self.pc.overflowing_sub(jump);
@@ -443,7 +443,7 @@ impl Cpu<'_> {
     ///
     /// 3 cycles if condition is met
     /// 2 cycles if condition is not met
-    fn jr_cc(&mut self, cc: Condition, e8: i8) {
+    pub(super) fn jr_cc(&mut self, cc: Condition, e8: i8) {
         if self.check_condition(cc) {
             self.jr(e8);
         }
@@ -452,60 +452,60 @@ impl Cpu<'_> {
     /// Load (copy) the value from the register on the right to the register on the left.
     ///
     /// 1 cycle
-    fn ld_r8_to_r8(&mut self, to: Register8, from: Register8) {
+    pub(super) fn ld_r8_to_r8(&mut self, to: Register8, from: Register8) {
         self.ld_const8_to_r8(to, self.reg(from));
     }
 
     /// Load the constant into the specified register
     ///
     /// 2 cycles
-    fn ld_const8_to_r8(&mut self, to: Register8, n8: u8) {
+    pub(super) fn ld_const8_to_r8(&mut self, to: Register8, n8: u8) {
         *self.reg_mut(to) = n8;
     }
 
     /// Load n16 value into specified 16 bit register
     ///
     /// 3 cycles
-    fn ld_const16_to_r16(&mut self, to: Register16, n16: u16) {
+    pub(super) fn ld_const16_to_r16(&mut self, to: Register16, n16: u16) {
         self.write_reg16(to, n16);
     }
 
     /// Store value from specified register into byte pointed to by HL
     ///
     /// 2 cycles
-    fn ld_r8_to_hl(&mut self, from: Register8) {
+    pub(super) fn ld_r8_to_hl(&mut self, from: Register8) {
         self.ld_const8_to_hl(self.reg(from));
     }
 
     /// Store the specified byte into the byte pointed to by HL
     ///
     /// 3 cycles
-    fn ld_const8_to_hl(&mut self, n8: u8) {
+    pub(super) fn ld_const8_to_hl(&mut self, n8: u8) {
         self.ld_const8_to_const16addr(n8, self.reg16(Register16::HL));
     }
 
-    fn ld_const8_to_const16addr(&mut self, n8: u8, n16: u16) {
+    pub(super) fn ld_const8_to_const16addr(&mut self, n8: u8, n16: u16) {
         self.mmu.write_8(n16, n8);
     }
 
     /// Store the value pointed to by HL into the specified register
     ///
     /// 2 cycles
-    fn ld_hl_to_r8(&mut self, to: Register8) {
+    pub(super) fn ld_hl_to_r8(&mut self, to: Register8) {
         *self.reg_mut(to) = self.mmu.read_8(self.reg16(Register16::HL));
     }
 
     /// Store the value in the A register into the address pointed to by the specified register
     ///
     /// 2 cycles
-    fn ld_a_to_r16addr(&mut self, reg: Register16) {
+    pub(super) fn ld_a_to_r16addr(&mut self, reg: Register16) {
         self.ld_a_to_const16addr(self.reg16(reg));
     }
 
     /// Store the value in the A register into the byte at the specified address
     ///
     /// 4 cycles
-    fn ld_a_to_const16addr(&mut self, n16: u16) {
+    pub(super) fn ld_a_to_const16addr(&mut self, n16: u16) {
         self.mmu.write_8(n16, self.a_reg());
     }
 
@@ -513,7 +513,7 @@ impl Cpu<'_> {
     /// the address is between 0xFF00 and 0xFFFF (I'm pretty sure both inclusive)
     ///
     /// 3 cycles
-    fn ldh_a_to_const16addr(&mut self, n16: u16) {
+    pub(super) fn ldh_a_to_const16addr(&mut self, n16: u16) {
         // I'm pretty sure this is meant as a guarantee and not as a noop if
         // the condition is not met
         assert!(n16 >= 0xFF00u16 && n16 <= 0xFFFFu16);
@@ -523,35 +523,35 @@ impl Cpu<'_> {
     /// Store the value in register A into the byte at address 0xFF00 + C (register)
     ///
     /// 2 cycles
-    fn ldh_a_to_ff00_plus_c(&mut self) {
+    pub(super) fn ldh_a_to_ff00_plus_c(&mut self) {
         self.ldh_a_to_const16addr(0xFF00 + self.c_reg() as u16);
     }
 
     /// Load value into register A from byte pointed to by the specified register
     ///
     /// 2 cycles
-    fn ld_r16addr_to_a(&mut self, reg: Register16) {
+    pub(super) fn ld_r16addr_to_a(&mut self, reg: Register16) {
         self.ld_const16addr_to_a(self.reg16(reg));
     }
 
     /// Load value into register A from byte pointed to by the specified address
     ///
     /// 4 cycles
-    fn ld_const16addr_to_a(&mut self, n16: u16) {
+    pub(super) fn ld_const16addr_to_a(&mut self, n16: u16) {
         self.ld_const16addr_to_r8(n16, Register8::A);
     }
 
     /// Load value into specified register from byte pointed to by the specified address
     ///
     /// Does not exist in GB classic
-    fn ld_const16addr_to_r8(&mut self, n16: u16, to: Register8) {
+    pub(super) fn ld_const16addr_to_r8(&mut self, n16: u16, to: Register8) {
         *self.reg_mut(to) = self.mmu.read_8(n16);
     }
 
     /// Load value from specified register into byte pointed to by the specified address
     ///
     /// Does not exist on the GB classic
-    fn ld_r8_to_const16addr(&mut self, from: Register8, n16: u16) {
+    pub(super) fn ld_r8_to_const16addr(&mut self, from: Register8, n16: u16) {
         self.mmu.write_8(n16, self.reg(from));
     }
 
@@ -559,7 +559,7 @@ impl Cpu<'_> {
     /// address is between 0xFF00 and 0xFFFF (both inclusive)
     ///
     /// 3 cycles
-    fn ldh_const16addr_to_a(&mut self, n16: u16) {
+    pub(super) fn ldh_const16addr_to_a(&mut self, n16: u16) {
         // I'm pretty sure this is meant as a guarantee and not as a noop if
         // the condition is not met
         assert!(n16 >= 0xFF00u16 && n16 <= 0xFFFFu16);
@@ -569,14 +569,14 @@ impl Cpu<'_> {
     /// Load value into register A from the byte at address 0xFF00 + C (register)
     ///
     /// 2 cycles
-    fn ldh_ff00_plus_c_to_a(&mut self) {
+    pub(super) fn ldh_ff00_plus_c_to_a(&mut self) {
         self.ldh_const16addr_to_a(0xFF00 + self.c_reg() as u16);
     }
 
     /// Load value from register A into byte pointed to by HL and increment HL
     ///
     /// 2 cycles
-    fn ld_a_to_hl_and_inc(&mut self) {
+    pub(super) fn ld_a_to_hl_and_inc(&mut self) {
         self.ld_r8_to_hl(Register8::A);
         self.inc_hl();
     }
@@ -584,7 +584,7 @@ impl Cpu<'_> {
     /// Load value from register A into byte pointed to by HL and decrement HL
     ///
     /// 2 cycles
-    fn ld_a_to_hl_and_dec(&mut self) {
+    pub(super) fn ld_a_to_hl_and_dec(&mut self) {
         self.ld_r8_to_hl(Register8::A);
         self.dec_hl();
     }
@@ -592,7 +592,7 @@ impl Cpu<'_> {
     /// Load value into register A from byte pointed to by HL and increment HL
     ///
     /// 2 cycles
-    fn ld_hl_to_a_and_inc(&mut self) {
+    pub(super) fn ld_hl_to_a_and_inc(&mut self) {
         self.ld_hl_to_r8(Register8::A);
         self.inc_hl();
     }
@@ -600,7 +600,7 @@ impl Cpu<'_> {
     /// Load value into register A from byte pointed to by HL and decrement HL
     ///
     /// 2 cycles
-    fn ld_hl_to_a_and_dec(&mut self) {
+    pub(super) fn ld_hl_to_a_and_dec(&mut self) {
         self.ld_hl_to_r8(Register8::A);
         self.dec_hl();
     }
@@ -608,7 +608,7 @@ impl Cpu<'_> {
     /// Load specified value into SP
     ///
     /// 3 cycles
-    fn ld_const16_to_sp(&mut self, n16: u16) {
+    pub(super) fn ld_const16_to_sp(&mut self, n16: u16) {
         self.sp = n16;
     }
 
@@ -616,7 +616,7 @@ impl Cpu<'_> {
     /// This is a weird one. xD
     ///
     /// 5 cycles
-    fn ld_sp_to_const16addr(&mut self, n16: u16) {
+    pub(super) fn ld_sp_to_const16addr(&mut self, n16: u16) {
         self.mmu.write_8(n16, (self.sp & 0xFF) as u8);
         self.mmu.write_8(n16 + 1, (self.sp >> 8) as u8);
     }
@@ -624,7 +624,7 @@ impl Cpu<'_> {
     /// Add the signed value e8 to SP and store the result in HL.
     ///
     /// 3 cycles
-    fn ld_sp_plus_e8_to_hl(&mut self, e8: i8) {
+    pub(super) fn ld_sp_plus_e8_to_hl(&mut self, e8: i8) {
         let res = if e8 < 0 {
             let add = e8 as u8;
             let (res, _) = self.sp.overflowing_add(add as u16);
@@ -655,20 +655,20 @@ impl Cpu<'_> {
     /// Load register HL into SP
     ///
     /// 2 cycles
-    fn ld_hl_to_sp(&mut self) {
+    pub(super) fn ld_hl_to_sp(&mut self) {
         self.sp = self.reg16(Register16::HL);
     }
 
     /// For completeness
     ///
     /// 1 cycle
-    fn nop() { }
+    pub(super) fn nop() { }
 
     /// Calculate the bitwise or between register A and the specified register and
     /// store the result in register A.
     ///
     /// 1 cycle
-    fn or_reg(&mut self, reg: Register8) {
+    pub(super) fn or_reg(&mut self, reg: Register8) {
         self.or(self.reg(reg));
     }
 
@@ -676,7 +676,7 @@ impl Cpu<'_> {
     /// and store the result in register A.
     ///
     /// 2 cycles
-    fn or_hl(&mut self) {
+    pub(super) fn or_hl(&mut self) {
         self.or(self.mmu.read_8(self.reg16(Register16::HL)));
     }
 
@@ -684,7 +684,7 @@ impl Cpu<'_> {
     /// store the result in register A.
     ///
     /// 2 cycles
-    fn or(&mut self, n8: u8) {
+    pub(super) fn or(&mut self, n8: u8) {
         let res = self.a_reg() | n8;
         self.set_zero_bit(res == 0);
         self.set_half_carry_bit(false);
@@ -696,7 +696,7 @@ impl Cpu<'_> {
     /// Pop register AF from the stack
     ///
     /// 3 cycles
-    fn pop_af(&mut self) {
+    pub(super) fn pop_af(&mut self) {
         // Flags should automatically be set, by loading this byte
         self.ld_const16addr_to_r8(self.sp, Register8::F);
         self.inc_sp();
@@ -707,7 +707,7 @@ impl Cpu<'_> {
     /// Pop specified register from stack
     ///
     /// 3 cycles
-    fn pop_r16(&mut self, reg: Register16) {
+    pub(super) fn pop_r16(&mut self, reg: Register16) {
         let (low_reg, high_reg) = reg.split();
         self.ld_const16addr_to_r8(self.sp, low_reg);
         self.inc_sp();
@@ -718,7 +718,7 @@ impl Cpu<'_> {
     /// Push register AF into the stack.
     ///
     /// 4 cycles
-    fn push_af(&mut self) {
+    pub(super) fn push_af(&mut self) {
         self.dec_sp();
         self.ld_r8_to_const16addr(Register8::A, self.sp);
         self.dec_sp();
@@ -729,7 +729,7 @@ impl Cpu<'_> {
     /// Push the specified register into the stack
     ///
     /// 4 cycles
-    fn push_r16(&mut self, reg: Register16) {
+    pub(super) fn push_r16(&mut self, reg: Register16) {
         let (low_reg, high_reg) = reg.split();
         self.dec_sp();
         self.ld_r8_to_const16addr(high_reg, self.sp);
@@ -740,7 +740,7 @@ impl Cpu<'_> {
     /// Push the specified 16 bit value into the stack
     ///
     /// This does not exist on the GB classic
-    fn push_n16(&mut self, n16: u16) {
+    pub(super) fn push_n16(&mut self, n16: u16) {
         let bytes = n16.to_le_bytes();
         self.dec_sp();
         // Higher byte first
@@ -753,14 +753,14 @@ impl Cpu<'_> {
     /// Set the specified bit of the register to 0
     ///
     /// 2 cycles
-    fn res_reg(&mut self, reg: Register8, bit: u8) {
+    pub(super) fn res_reg(&mut self, reg: Register8, bit: u8) {
         *self.reg_mut(reg) &= !(1 << bit);
     }
 
     /// Set the specified bit of the byte pointed to by HL to 0
     ///
     /// 4 cycles
-    fn res_hl(&mut self, bit: u8) {
+    pub(super) fn res_hl(&mut self, bit: u8) {
         let mut val = self.mmu.read_8(self.reg16(Register16::HL));
         val &= !(1 << bit);
         self.mmu.write_8(self.reg16(Register16::HL), val);
@@ -769,7 +769,7 @@ impl Cpu<'_> {
     /// Return from subroutine. This is basically POP PC, if it had existed.
     ///
     /// 4 cycles
-    fn ret(&mut self) {
+    pub(super) fn ret(&mut self) {
         let low_byte = self.mmu.read_8(self.sp);
         self.inc_sp();
         let high_byte = self.mmu.read_8(self.sp);
@@ -781,7 +781,7 @@ impl Cpu<'_> {
     ///
     /// 5 cycles if condition is met.
     /// 2 cycles if condition is not met.
-    fn ret_cc(&mut self, cc: Condition) {
+    pub(super) fn ret_cc(&mut self, cc: Condition) {
         if self.check_condition(cc) {
             self.ret()
         }
@@ -791,7 +791,7 @@ impl Cpu<'_> {
     /// This IMMEDIATELY enables interrupts after the instruction in contrast to EI
     ///
     /// 4 cycles
-    fn reti(&mut self) {
+    pub(super) fn reti(&mut self) {
         self.ei();
         self.ret();
     }
@@ -799,14 +799,14 @@ impl Cpu<'_> {
     /// Rotate the register left through the carry bit
     ///
     /// 2 cycles
-    fn rl(&mut self, reg: Register8) {
+    pub(super) fn rl(&mut self, reg: Register8) {
         *self.reg_mut(reg) = self.rl_helper(self.reg(reg));
     }
 
     /// Rotate the byte pointed to by HL to the left through the carry bit
     ///
     /// 4 cycles
-    fn rl_hl(&mut self) {
+    pub(super) fn rl_hl(&mut self) {
         let val = self.mmu.read_8(
             self.reg16(Register16::HL)
         );
@@ -819,13 +819,13 @@ impl Cpu<'_> {
     /// The resulting flags are a bit different.
     ///
     /// 1 cycle
-    fn rla(&mut self) {
+    pub(super) fn rla(&mut self) {
         self.rl(Register8::A);
         self.set_zero_bit(false); // By definition
     }
 
     /// A small helper to rotate the specified byte to the left through the carry bit
-    fn rl_helper(&mut self, mut n8: u8) -> u8 {
+    pub(super) fn rl_helper(&mut self, mut n8: u8) -> u8 {
         // Behavior (apparently)
         // Index
         // C
@@ -854,14 +854,14 @@ impl Cpu<'_> {
     /// Rotate the specified register
     ///
     /// 2 cycles
-    fn rlc(&mut self, reg: Register8) {
+    pub(super) fn rlc(&mut self, reg: Register8) {
         *self.reg_mut(reg) = self.rlc_helper(self.reg(reg));
     }
 
     /// Rotate the byte pointed to by HL
     ///
     /// 4 cycles
-    fn rlc_hl(&mut self) {
+    pub(super) fn rlc_hl(&mut self) {
         let val = self.mmu.read_8(
             self.reg16(Register16::HL)
         );
@@ -873,13 +873,13 @@ impl Cpu<'_> {
     /// Rotate the A register to the left. The resulting flags are a bit different.
     ///
     /// 1 cycle
-    fn rlca(&mut self) {
+    pub(super) fn rlca(&mut self) {
         self.rlc(Register8::A);
         self.set_zero_bit(false); // By definition
     }
 
     /// Rotate the specified byte to the left
-    fn rlc_helper(&mut self, mut n8: u8) -> u8{
+    pub(super) fn rlc_helper(&mut self, mut n8: u8) -> u8{
         // Behavior (apparently)
         // Index
         // C
@@ -908,14 +908,14 @@ impl Cpu<'_> {
     /// Rotate the specified register to the right through the carry bit
     ///
     /// 2 cycles
-    fn rr(&mut self, reg: Register8) {
+    pub(super) fn rr(&mut self, reg: Register8) {
         *self.reg_mut(reg) = self.rr_helper(self.reg(reg));
     }
 
     /// Rotate the byte pointed to by HL to the right throught the carry bit
     ///
     /// 4 cycles
-    fn rr_hl(&mut self) {
+    pub(super) fn rr_hl(&mut self) {
         let val = self.mmu.read_8(
             self.reg16(Register16::HL)
         );
@@ -928,13 +928,13 @@ impl Cpu<'_> {
     /// The resulting flags are a bit different.
     ///
     /// 1 cycle
-    fn rra(&mut self) {
+    pub(super) fn rra(&mut self) {
         self.rr(Register8::A);
         self.set_zero_bit(false); // By definition
     }
 
     /// A helper to rotate the specified byte to the right
-    fn rr_helper(&mut self, mut n8: u8) -> u8 {
+    pub(super) fn rr_helper(&mut self, mut n8: u8) -> u8 {
         // Behavior (apparently)
         // Index
         //                 C
@@ -963,14 +963,14 @@ impl Cpu<'_> {
     /// Rotate the specified register to the right
     ///
     /// 2 cycles
-    fn rrc(&mut self, reg: Register8) {
+    pub(super) fn rrc(&mut self, reg: Register8) {
         *self.reg_mut(reg) = self.rrc_helper(self.reg(reg));
     }
 
     /// Rotate the byte pointed to by HL to the right
     ///
     /// 4 cycles
-    fn rrc_hl(&mut self) {
+    pub(super) fn rrc_hl(&mut self) {
         let val = self.mmu.read_8(
             self.reg16(Register16::HL)
         );
@@ -982,13 +982,13 @@ impl Cpu<'_> {
     /// Rotate the A register to the right. The resulting flags are a bit different
     ///
     /// 1 cycle
-    fn rrca(&mut self) {
+    pub(super) fn rrca(&mut self) {
         self.rrc(Register8::A);
         self.set_zero_bit(false); // By definition
     }
 
     /// Rotate the specified byte to the right
-    fn rrc_helper(&mut self, mut n8: u8) -> u8{
+    pub(super) fn rrc_helper(&mut self, mut n8: u8) -> u8{
         // Behavior (apparently)
         // Index
         // C
@@ -1017,7 +1017,7 @@ impl Cpu<'_> {
     /// Call the address associated with the reset vector. This is faster than a normal call
     ///
     /// 4 cycles
-    fn rst(&mut self, vec: ResetVec) {
+    pub(super) fn rst(&mut self, vec: ResetVec) {
         self.push_n16(self.pc);
         self.pc = match vec {
             ResetVec::Vec1 => 0x00,
@@ -1034,21 +1034,21 @@ impl Cpu<'_> {
     /// Subtract the value in the specified register + the carry from the A register
     ///
     /// 1 cycle
-    fn sbc_r8(&mut self, reg: Register8) {
+    pub(super) fn sbc_r8(&mut self, reg: Register8) {
         self.sbc(self.reg(reg));
     }
 
     /// Subtract the value in the byte pointed to by HL + the carry from the A register
     ///
     /// 2 cycles
-    fn sbc_hl(&mut self) {
+    pub(super) fn sbc_hl(&mut self) {
         self.sbc(self.mmu.read_8(self.reg16(Register16::HL)));
     }
 
     /// Subtract the byte + the carry from the A register
     ///
     /// 2 cycles
-    fn sbc(&mut self, n8: u8) {
+    pub(super) fn sbc(&mut self, n8: u8) {
         let carry = if self.carry_bit() { 1u8 } else { 0u8 };
         let result = self.a_reg() as i16 - n8 as i16 - carry as i16;
 
@@ -1065,7 +1065,7 @@ impl Cpu<'_> {
     /// Set the carry flag
     ///
     /// 1 cycle
-    fn scf(&mut self) {
+    pub(super) fn scf(&mut self) {
         self.set_carry_bit(true); // By definition
         self.set_negative_bit(false); // By definition
         self.set_half_carry_bit(false); // By definition
@@ -1074,7 +1074,7 @@ impl Cpu<'_> {
     /// Set the specified bit in the specified register to high
     ///
     /// 2 cycles
-    fn set_r8(&mut self, reg: Register8, bit: u8) {
+    pub(super) fn set_r8(&mut self, reg: Register8, bit: u8) {
         // TODO check if set methods work correctly
         *self.reg_mut(reg) |= 1 << bit;
     }
@@ -1082,7 +1082,7 @@ impl Cpu<'_> {
     /// Set the specified bit in the byte pointed to by HL to high
     ///
     /// 4 cycles
-    fn set_hl(&mut self, bit: u8) {
+    pub(super) fn set_hl(&mut self, bit: u8) {
         let mut read = self.mmu.read_8(self.reg16(Register16::HL));
         read |= 1 << bit;
         self.mmu.write_8(self.reg16(Register16::HL), read);
@@ -1091,14 +1091,14 @@ impl Cpu<'_> {
     /// Shift the specified register to the left arithmetically
     ///
     /// 2 cycles
-    fn sla_reg(&mut self, reg: Register8) {
+    pub(super) fn sla_reg(&mut self, reg: Register8) {
         *self.reg_mut(reg) = self.sla_helper(self.reg(reg));
     }
 
     /// Shift the byte pointed to by HL to the left arithmetically
     ///
     /// 4 cycles
-    fn sla_hl(&mut self) {
+    pub(super) fn sla_hl(&mut self) {
         let val = self.mmu.read_8(
             self.reg16(Register16::HL)
         );
@@ -1108,7 +1108,7 @@ impl Cpu<'_> {
     }
 
     /// A helper for shifting left arithmetically
-    fn sla_helper(&mut self, mut n8: u8) -> u8 {
+    pub(super) fn sla_helper(&mut self, mut n8: u8) -> u8 {
         // Behavior (apparently)
         // Index
         // C
@@ -1139,14 +1139,14 @@ impl Cpu<'_> {
     /// Shift the specified register to the right arithmetically
     ///
     /// 2 cycles
-    fn sra_reg(&mut self, reg: Register8) {
+    pub(super) fn sra_reg(&mut self, reg: Register8) {
         *self.reg_mut(reg) = self.sra_helper(self.reg(reg));
     }
 
     /// Shift the byte pointed to by HL to the right arithmetically
     ///
     /// 4 cycles
-    fn sra_hl(&mut self) {
+    pub(super) fn sra_hl(&mut self) {
         let val = self.mmu.read_8(
             self.reg16(Register16::HL)
         );
@@ -1155,7 +1155,7 @@ impl Cpu<'_> {
         self.mmu.write_8(reg_val, val);
     }
 
-    fn sra_helper(&mut self, mut n8: u8) -> u8 {
+    pub(super) fn sra_helper(&mut self, mut n8: u8) -> u8 {
         // Behavior (apparently)
         // Index
         //                 C
@@ -1186,14 +1186,14 @@ impl Cpu<'_> {
     /// Shift specified register to the right logically
     ///
     /// 2 cycles
-    fn srl_reg(&mut self, reg: Register8) {
+    pub(super) fn srl_reg(&mut self, reg: Register8) {
         *self.reg_mut(reg) = self.srl_helper(self.reg(reg));
     }
 
     /// Shift the byte pointed to by HL to the right logically
     ///
     /// 4 cycles
-    fn srl_hl(&mut self) {
+    pub(super) fn srl_hl(&mut self) {
         let val = self.mmu.read_8(
             self.reg16(Register16::HL)
         );
@@ -1202,7 +1202,7 @@ impl Cpu<'_> {
         self.mmu.write_8(reg_val, val);
     }
 
-    fn srl_helper(&mut self, mut n8: u8) -> u8 {
+    pub(super) fn srl_helper(&mut self, mut n8: u8) -> u8 {
         // Behavior (apparently)
         // Index
         //                 C
@@ -1231,28 +1231,28 @@ impl Cpu<'_> {
     /// Enter CPU very low power mode
     ///
     /// - cycles
-    fn stop(&mut self) {
+    pub(super) fn stop(&mut self) {
         todo!()
     }
 
     /// Subtract the value in the specified register from the A register
     ///
     /// 1 cycle
-    fn sub_r8(&mut self, reg: Register8) {
+    pub(super) fn sub_r8(&mut self, reg: Register8) {
         self.sub(self.reg(reg));
     }
 
     /// Subtract the value from the byte pointed to by HL from the A register
     ///
     /// 2 cycles
-    fn sub_hl(&mut self) {
+    pub(super) fn sub_hl(&mut self) {
         self.sub(self.mmu.read_8(self.reg16(Register16::HL)));
     }
 
     /// Subtract the specified value from the A register
     ///
     /// 2 cycles
-    fn sub(&mut self, n8: u8) {
+    pub(super) fn sub(&mut self, n8: u8) {
         let a = self.a_reg();
         self.set_zero_bit(a == n8); // Result is only zero, if A == n8
         self.set_negative_bit(true); // By definition
@@ -1265,14 +1265,14 @@ impl Cpu<'_> {
     /// Swap the higher and lower 4 bits in the specified register
     ///
     /// 2 cycles
-    fn swap_reg(&mut self, reg: Register8) {
+    pub(super) fn swap_reg(&mut self, reg: Register8) {
         *self.reg_mut(reg) = self.swap_helper(self.reg(reg));
     }
 
     /// Swap the higher and lower 4 bits in the byte pointed to by HL
     ///
     /// 4 cycles
-    fn swap_hl(&mut self) {
+    pub(super) fn swap_hl(&mut self) {
         let val = self.mmu.read_8(
             self.reg16(Register16::HL)
         );
@@ -1282,7 +1282,7 @@ impl Cpu<'_> {
     }
 
     /// Swap the lower and higher 4 bits, set flags as expected and return the result
-    fn swap_helper(&mut self, n8: u8) -> u8 {
+    pub(super) fn swap_helper(&mut self, n8: u8) -> u8 {
         let lower = n8 & 0x0F;
         let higher = n8 & 0xF0;
         let res = (lower << 4) | (higher >> 4);
@@ -1297,7 +1297,7 @@ impl Cpu<'_> {
     /// register.
     ///
     /// 1 cycle
-    fn xor_reg(&mut self, reg: Register8) {
+    pub(super) fn xor_reg(&mut self, reg: Register8) {
         self.xor(self.reg(reg));
     }
 
@@ -1305,14 +1305,14 @@ impl Cpu<'_> {
     /// A register.
     ///
     /// 2 cycles
-    fn xor_hl(&mut self) {
+    pub(super) fn xor_hl(&mut self) {
         self.xor(self.mmu.read_8(self.reg16(Register16::HL)));
     }
 
     /// Bitwise XOR between the value in n8 and the A register. Store the result in the A register.
     ///
     /// 2 cycles
-    fn xor(&mut self, n8: u8) {
+    pub(super) fn xor(&mut self, n8: u8) {
         let res = self.reg(Register8::A) ^ n8;
         self.set_zero_bit(res == 0);
         self.set_carry_bit(false); // By definition
