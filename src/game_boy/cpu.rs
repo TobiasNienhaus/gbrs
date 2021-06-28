@@ -1490,4 +1490,11 @@ impl Cpu<'_> {
         self.set_negative_bit(false); // By definition
         n8
     }
+
+    /// Enter CPU very low power mode
+    ///
+    /// - cycles
+    fn stop(&mut self) {
+        todo!()
+    }
 }
