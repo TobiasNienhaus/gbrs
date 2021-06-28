@@ -92,7 +92,7 @@ impl Cpu<'_> {
     /// Add a u16 to HL
     ///
     /// Actually not supported by the GB Classic
-    pub(super) fn add_n16_to_hl(&mut self, n16: u16) {
+    fn add_n16_to_hl(&mut self, n16: u16) {
         let hl = self.reg16(Register16::HL);
         let (res, overflow) = hl.overflowing_add(n16);
 
@@ -177,7 +177,7 @@ impl Cpu<'_> {
     /// Test if the specified bit of the byte is set and set the zero flag IF NOT set
     ///
     /// This technically doesn't exist for arbitrary bytes in the GB Classic
-    pub(super) fn bit(&mut self, to_test: u8, bit: u8) {
+    fn bit(&mut self, to_test: u8, bit: u8) {
         assert!(bit <= 7); // Is an assert necessary?
         // This somehow doesn't set (or reset) the carry flag
         self.set_zero_bit(to_test & (1 << bit) == 0);
@@ -544,14 +544,14 @@ impl Cpu<'_> {
     /// Load value into specified register from byte pointed to by the specified address
     ///
     /// Does not exist in GB classic
-    pub(super) fn ld_const16addr_to_r8(&mut self, n16: u16, to: Register8) {
+    fn ld_const16addr_to_r8(&mut self, n16: u16, to: Register8) {
         *self.reg_mut(to) = self.mmu.read_8(n16);
     }
 
     /// Load value from specified register into byte pointed to by the specified address
     ///
     /// Does not exist on the GB classic
-    pub(super) fn ld_r8_to_const16addr(&mut self, from: Register8, n16: u16) {
+    fn ld_r8_to_const16addr(&mut self, from: Register8, n16: u16) {
         self.mmu.write_8(n16, self.reg(from));
     }
 
@@ -740,7 +740,7 @@ impl Cpu<'_> {
     /// Push the specified 16 bit value into the stack
     ///
     /// This does not exist on the GB classic
-    pub(super) fn push_n16(&mut self, n16: u16) {
+    fn push_n16(&mut self, n16: u16) {
         let bytes = n16.to_le_bytes();
         self.dec_sp();
         // Higher byte first
@@ -825,7 +825,7 @@ impl Cpu<'_> {
     }
 
     /// A small helper to rotate the specified byte to the left through the carry bit
-    pub(super) fn rl_helper(&mut self, mut n8: u8) -> u8 {
+    fn rl_helper(&mut self, mut n8: u8) -> u8 {
         // Behavior (apparently)
         // Index
         // C
@@ -879,7 +879,7 @@ impl Cpu<'_> {
     }
 
     /// Rotate the specified byte to the left
-    pub(super) fn rlc_helper(&mut self, mut n8: u8) -> u8{
+    fn rlc_helper(&mut self, mut n8: u8) -> u8{
         // Behavior (apparently)
         // Index
         // C
@@ -988,7 +988,7 @@ impl Cpu<'_> {
     }
 
     /// Rotate the specified byte to the right
-    pub(super) fn rrc_helper(&mut self, mut n8: u8) -> u8{
+    fn rrc_helper(&mut self, mut n8: u8) -> u8{
         // Behavior (apparently)
         // Index
         // C
@@ -1108,7 +1108,7 @@ impl Cpu<'_> {
     }
 
     /// A helper for shifting left arithmetically
-    pub(super) fn sla_helper(&mut self, mut n8: u8) -> u8 {
+    fn sla_helper(&mut self, mut n8: u8) -> u8 {
         // Behavior (apparently)
         // Index
         // C
@@ -1155,7 +1155,7 @@ impl Cpu<'_> {
         self.mmu.write_8(reg_val, val);
     }
 
-    pub(super) fn sra_helper(&mut self, mut n8: u8) -> u8 {
+    fn sra_helper(&mut self, mut n8: u8) -> u8 {
         // Behavior (apparently)
         // Index
         //                 C
@@ -1202,7 +1202,7 @@ impl Cpu<'_> {
         self.mmu.write_8(reg_val, val);
     }
 
-    pub(super) fn srl_helper(&mut self, mut n8: u8) -> u8 {
+    fn srl_helper(&mut self, mut n8: u8) -> u8 {
         // Behavior (apparently)
         // Index
         //                 C
@@ -1282,7 +1282,7 @@ impl Cpu<'_> {
     }
 
     /// Swap the lower and higher 4 bits, set flags as expected and return the result
-    pub(super) fn swap_helper(&mut self, n8: u8) -> u8 {
+    fn swap_helper(&mut self, n8: u8) -> u8 {
         let lower = n8 & 0x0F;
         let higher = n8 & 0xF0;
         let res = (lower << 4) | (higher >> 4);
