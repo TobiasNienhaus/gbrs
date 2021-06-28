@@ -652,8 +652,8 @@ impl Cpu {
     ///
     /// 2 cycles
     pub(super) fn ld_a_to_hl_and_dec(&mut self) -> u32 {
-        self.ld_r8_to_hl(Register8::A);
         self.dec_hl();
+        self.ld_r8_to_hl(Register8::A);
         2
     }
 
@@ -670,8 +670,8 @@ impl Cpu {
     ///
     /// 2 cycles
     pub(super) fn ld_hl_to_a_and_dec(&mut self) -> u32 {
-        self.ld_hl_to_r8(Register8::A);
         self.dec_hl();
+        self.ld_hl_to_r8(Register8::A);
         2
     }
 
