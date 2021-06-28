@@ -4,7 +4,11 @@ use std::net::Shutdown::Read;
 
 impl Cpu {
     pub fn tick(&mut self) -> u32 {
+        if !self.is_running() {
+            return 1;
+        }
         let instruction = self.read_u8();
+        // println!("Instruction: {:#04X} Program counter: {:#06X}", instruction, self.pc);
 
         let cycle_count = match instruction {
             0x00 => self.nop(),
