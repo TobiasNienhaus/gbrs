@@ -3,7 +3,7 @@ use super::instructions::*;
 use std::net::Shutdown::Read;
 
 impl Cpu<'_> {
-    pub fn handle_instructions(&mut self) {
+    pub fn tick(&mut self) -> u32 {
         let instruction: u8 = todo!();
 
         let cycle_count = match instruction {
@@ -257,6 +257,7 @@ impl Cpu<'_> {
             0xFF => self.rst(ResetVec::Vec8),
             _ => unreachable!("{:#04X} is not a valid instruction code", instruction)
         };
+        cycle_count
     }
 
     fn execute_cb(&mut self) -> u32 {
