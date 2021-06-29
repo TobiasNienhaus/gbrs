@@ -4,7 +4,8 @@ use std::ops::Range;
 use std::path::PathBuf;
 
 pub mod rom;
-pub mod video_locations;
+pub mod video;
+pub mod misc;
 
 #[derive(Debug)]
 pub enum MemError {
@@ -131,7 +132,10 @@ impl MMU {
     pub fn write_8(&mut self, address: u16, val: u8) -> MemResult<()> {
         // TODO there are some special addresses with specific behavior
         // 0xFF46 -> Transfer ROM or RAM to OAM
-        if MMU::ROM_REGION.contains(&address) {
+        if address == MMU::DMA {
+            self.dma_transfer(val);
+            Ok(())
+        } else if MMU::ROM_REGION.contains(&address) {
             Err(MemError::InvalidAddressRegion(MemRegion::get_region(
                 address,
             )))
