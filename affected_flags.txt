@@ -1,0 +1,62 @@
+Commands setting a flag
+Command           | Z | N | H | C |
+-----------------------------------
+INC r8            | X | 0 | H |   |
+INC [HL]          | X | 0 | H |   |
+DEC r8            | X | 1 | H |   |
+DEC [HL]          | X | 1 | H |   |
+RLCA              | 0 | 0 | 0 | C |
+ADD HL,r16        |   | 0 | H | C |
+ADD HL,SP         |   | 0 | H | C |
+RRCA              | 0 | 0 | 0 | C |
+RLA               | 0 | 0 | 0 | C |
+RRA               | 0 | 0 | 0 | C |
+DAA               | Z |   | 0 | C |
+CPL               |   | 1 | 1 |   |
+SCF               |   | 0 | 0 | 1 |
+CCF               |   | 0 | 0 | C |
+ADD A,r8          | Z | 0 | H | C |
+ADD A,n8          | Z | 0 | H | C |
+ADD A,[HL]        | Z | 0 | H | C |
+ADC A,r8          | Z | 0 | H | C |
+ADC A,n8          | Z | 0 | H | C |
+ADC A,[HL]        | Z | 0 | H | C |
+SUB A,r8          | Z | 1 | H | C |
+SUB A,n8          | Z | 1 | H | C |
+SUB A,[HL]        | Z | 1 | H | C |
+SBC A,r8          | Z | 1 | H | C |
+SBC A,n8          | Z | 1 | H | C |
+SBC A,[HL]        | Z | 1 | H | C |
+AND r8            | Z | 0 | 1 | 0 |
+AND n8            | Z | 0 | 1 | 0 |
+AND [HL]          | Z | 0 | 1 | 0 |
+XOR r8            | Z | 0 | 0 | 0 |
+XOR n8            | Z | 0 | 0 | 0 |
+XOR [HL]          | Z | 0 | 0 | 0 |
+OR r8             | Z | 0 | 0 | 0 |
+OR n8             | Z | 0 | 0 | 0 |
+OR [HL]           | Z | 0 | 0 | 0 |
+CP r8             | Z | 1 | H | C |
+CP n8             | Z | 1 | H | C |
+CP [HL]           | Z | 1 | H | C |
+POP AF            | Z | N | H | C |
+ADD SP,e8         | 0 | 0 | H | C |
+LD HL,SP+e8       | 0 | 0 | H | C |
+RLC r8            | Z | 0 | 0 | C |
+RLC [HL]          | Z | 0 | 0 | C |
+RRC r8            | Z | 0 | 0 | C |
+RRC [HL]          | Z | 0 | 0 | C |
+RL r8             | Z | 0 | 0 | C |
+RL [HL]           | Z | 0 | 0 | C |
+RR r8             | Z | 0 | 0 | C |
+RR [HL]           | Z | 0 | 0 | C |
+SLA r8            | Z | 0 | 0 | C |
+SLA [HL]          | Z | 0 | 0 | C |
+SRA r8            | Z | 0 | 0 | 0 |
+SRA [HL]          | Z | 0 | 0 | 0 |
+SWAP r8           | Z | 0 | 0 | 0 |
+SWAP [HL]         | Z | 0 | 0 | 0 |
+SRL r8            | Z | 0 | 0 | C |
+SRL [HL]          | Z | 0 | 0 | C |
+BIT u3,r8         | Z | 0 | 1 |   |
+BIT u3,[HL]       | Z | 0 | 1 |   |
