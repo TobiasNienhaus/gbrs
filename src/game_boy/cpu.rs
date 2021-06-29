@@ -234,6 +234,16 @@ impl Cpu {
         // TODO check if byte order is correct
         u16::from_le_bytes([self.reg(low), self.reg(high)])
     }
+
+    pub fn dump_flags(&self) {
+        println!(
+            "ZERO: {}\nHALF CARRY: {}\nCARRY: {}\nNEGATIVE: {}",
+            self.zero_bit(),
+            self.half_carry_bit(),
+            self.carry_bit(),
+            self.negative_bit()
+        )
+    }
 }
 
 impl Cpu {

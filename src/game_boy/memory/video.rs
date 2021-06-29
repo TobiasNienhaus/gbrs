@@ -22,7 +22,7 @@ impl VideoMode {
     }
 }
 
-fn check_bit(byte: u8, bit: u8) -> byte {
+fn check_bit(byte: u8, bit: u8) -> bool {
     (byte >> bit) & 0x1 == 0x1
 }
 
@@ -31,15 +31,52 @@ pub enum SpriteSize {
     Double
 }
 
+#[derive(Copy, Clone)]
+pub enum BgTileMapMode {
+    Signed,
+    Unsigned
+}
+
+impl BgTileMapMode {
+    pub fn address_range(&self) -> std::ops::RangeInclusive<u16> {
+        match self {
+            BgTileMapMode::Signed => 0x8800..=0x97FF,
+            BgTileMapMode::Unsigned => 0x8000..=0x8FFF,
+        }
+    }
+
+    pub fn pivot(&self) -> u16 {
+        match self {
+            BgTileMapMode::Signed => 0x8800,
+            BgTileMapMode::Unsigned => 0x8000,
+        }
+    }
+}
+
 pub struct LcdcSettings {
     display_enabled: bool,
-    window_tile_map_display_select: std::ops::RangeInclusive<u16>,
+    window_tile_map_display_select: SelectedTileMap,
     window_enabled: bool,
-    bg_and_window_tile_data_select: std::ops::RangeInclusive<u16>,
-    bg_tile_map_display_select: std::ops::RangeInclusive<u16>,
+    // Indices of tiles
+    bg_and_window_tile_data_select: BgTileMapMode,
+    bg_tile_map_display_select: SelectedTileMap,
     sprite_size: SpriteSize,
     sprite_display_enabled: bool,
     background_enabled: bool
+}
+
+pub enum SelectedTileMap {
+    High,
+    Low
+}
+
+impl SelectedTileMap {
+    pub fn start_address(&self) -> u16 {
+        match self {
+            SelectedTileMap::High => 0x9C00,
+            SelectedTileMap::Low => 0x9800,
+        }
+    }
 }
 
 impl LcdcSettings {
@@ -47,20 +84,20 @@ impl LcdcSettings {
         LcdcSettings {
             display_enabled: check_bit(byte, 7),
             window_tile_map_display_select: if check_bit(byte, 6) {
-                0x9C00..=0x9FFF
+                SelectedTileMap::High
             } else {
-                0x9800..=0x9BFF
+                SelectedTileMap::Low
             },
             window_enabled: check_bit(byte, 5),
             bg_and_window_tile_data_select: if check_bit(byte, 4) {
-                0x8000..=0x8FFF
+                BgTileMapMode::Unsigned
             } else {
-                0x8800..=0x97FF
+                BgTileMapMode::Signed
             },
             bg_tile_map_display_select: if check_bit(byte, 3) {
-                0x9C00..=0x9FFF
+                SelectedTileMap::High
             } else {
-                0x9800..=0x9BFF
+                SelectedTileMap::Low
             },
             sprite_size: if check_bit(byte, 2) { SpriteSize::Double } else { SpriteSize::Single },
             sprite_display_enabled: check_bit(byte, 1),
@@ -80,11 +117,11 @@ impl MMU {
         self.get_lcdc_bit(7)
     }
 
-    pub fn window_tile_map_display_select(&self) -> std::ops::RangeInclusive<u16> {
+    pub fn window_tile_map_display_select(&self) -> SelectedTileMap {
         if self.get_lcdc_bit(6) {
-            0x9C00..=0x9FFF
+            SelectedTileMap::High
         } else {
-            0x9800..=0x9BFF
+            SelectedTileMap::Low
         }
     }
 
@@ -92,19 +129,19 @@ impl MMU {
         self.get_lcdc_bit(5)
     }
 
-    pub fn bg_and_window_tile_data_select(&self) -> std::ops::RangeInclusive<u16> {
+    pub fn bg_and_window_tile_data_select(&self) -> BgTileMapMode {
         if self.get_lcdc_bit(4) {
-            0x8000..=0x8FFF
+            BgTileMapMode::Unsigned
         } else {
-            0x8800..=0x97FF
+            BgTileMapMode::Signed
         }
     }
 
-    pub fn bg_tile_map_display_select(&self) -> std::ops::RangeInclusive<u16> {
+    pub fn bg_tile_map_display_select(&self) -> SelectedTileMap {
         if self.get_lcdc_bit(3) {
-            0x9C00..=0x9FFF
+            SelectedTileMap::High
         } else {
-            0x9800..=0x9BFF
+            SelectedTileMap::Low
         }
     }
 
@@ -234,6 +271,7 @@ impl MMU {
     const LY: u16 = 0xFF44;
 
     pub fn set_ly(&mut self, val: u8) {
+        // println!("Setting LY to {:#04X}", val);
         self.write_8(MMU::LY, val);
     }
 
@@ -296,7 +334,7 @@ impl Palette {
     }
 
     pub fn remap(&self, color: u8) -> u8 {
-        self.mapping[color & 0b11]
+        self.mapping[(color & 0b11) as usize]
     }
 }
 
@@ -320,13 +358,13 @@ impl MMU {
     }
 }
 
-pub struct Tile {
+pub struct Sprite {
     colors: [[u8; 8]; 8]
 }
 
-impl Tile {
+impl Sprite {
     /// A tile is 16 bytes, with 2 bits per color
-    fn from_u128(bytes: u128) -> Tile {
+    fn from_u128(bytes: u128) -> Sprite {
         // TODO is this at all correct?
         let mut colors = [[0u8; 8]; 8];
         for (idx, b) in bytes.to_le_bytes().iter().enumerate() {
@@ -340,12 +378,103 @@ impl Tile {
                 }
             }
         }
-        Tile {
+        Sprite {
             colors
         }
     }
 
-    fn from_bytes(bytes: [u8; 16]) -> Tile {
-        Tile::from_u128(u128::from_le_bytes(bytes))
+    fn from_bytes(bytes: [u8; 16]) -> Sprite {
+        Sprite::from_u128(u128::from_le_bytes(bytes))
+    }
+
+    pub fn get(&self, x: usize, y: usize) -> u8 {
+        // Lines first, then rows
+        self.colors[y][x]
+    }
+}
+
+impl MMU {
+    pub fn read_sprite(&self, address: u16) -> Sprite {
+        Sprite::from_u128(self.read_128(address))
+    }
+}
+
+#[derive(Copy, Clone)]
+pub enum TileMapTile {
+    Signed(i8),
+    Unsigned(u8)
+}
+
+impl TileMapTile {
+    pub fn unsigned_from_byte(byte: u8) -> TileMapTile {
+        TileMapTile::Unsigned(byte)
+    }
+
+    pub fn signed_from_byte(byte: u8) -> TileMapTile {
+        TileMapTile::Signed(i8::from_le_bytes([byte]))
+    }
+
+    pub fn unwrap_signed(self) -> i8 {
+        match self {
+            TileMapTile::Signed(num) => num,
+            TileMapTile::Unsigned(_) => panic!("Unwrapping unsigned TileMapTile as signed!"),
+        }
+    }
+
+    pub fn unwrap_unsigned(self) -> u8 {
+        match self {
+            TileMapTile::Unsigned(num) => num,
+            TileMapTile::Signed(_) => panic!("Unwrapping unsigned TileMapTile as signed!"),
+        }
+    }
+}
+
+pub struct BgTileMap {
+    mode: BgTileMapMode,
+    map: [[TileMapTile; 32]; 32]
+}
+
+impl BgTileMap {
+    pub fn get_tile_address(&self, x: usize, y: usize) -> u16 {
+        match self.mode {
+            BgTileMapMode::Signed => {
+                // TODO figure out, if this wraps correctly => -1 -> u16::MAX - 1
+                (((self.mode.pivot() as i32) + (self.map[y][x].unwrap_signed() as i32)) as u16)
+            }
+            BgTileMapMode::Unsigned => {
+                self.mode.pivot().overflowing_add(self.map[y][x].unwrap_unsigned() as u16).0
+            }
+        }
+    }
+}
+
+impl MMU {
+    pub fn load_bg_tilemap(&self) -> BgTileMap {
+        let mode = self.bg_and_window_tile_data_select();
+        let selected = self.bg_tile_map_display_select();
+        self.load_tilemap(selected.start_address())
+    }
+
+    pub fn load_window_tilemap(&self) -> BgTileMap {
+        let selected = self.window_tile_map_display_select();
+        self.load_tilemap(selected.start_address())
+    }
+
+    fn load_tilemap(&self, address: u16) -> BgTileMap {
+        let mode = self.bg_and_window_tile_data_select();
+        let mut map = [[TileMapTile::Unsigned(0); 32]; 32];
+        for idx in 0..32 * 32 {
+            let x = idx % 32;
+            let y = idx / 32;
+            let byte = self.read_8(address + idx);
+            map[y as usize][x as usize] = match mode {
+                BgTileMapMode::Signed => TileMapTile::signed_from_byte(byte),
+                BgTileMapMode::Unsigned => TileMapTile::unsigned_from_byte(byte),
+            }
+        }
+        BgTileMap {
+            mode,
+            map
+        }
     }
 }

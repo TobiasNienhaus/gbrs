@@ -59,18 +59,18 @@ fn main() {
 
     let mut window = GbWindow::new(opts.magnification);
 
-    for i in window.buffer_mut().iter_mut() {
-        *i = rand::thread_rng().gen_range(0..=3);
-    }
+    // for i in window.buffer_mut().iter_mut() {
+    //     *i = rand::thread_rng().gen_range(0..=3);
+    // }
 
     while window.is_open() {
         // if window.win().is_key_pressed(Key::Space, KeyRepeat::No) {
-            for i in window.buffer_mut().iter_mut() {
-                *i = rand::thread_rng().gen_range(0..=3);
-            }
+        //     for i in window.buffer_mut().iter_mut() {
+        //         *i = rand::thread_rng().gen_range(0..=3);
+        //     }
         // }
 
-        gb.frame();
+        gb.frame(window.buffer_mut());
 
         window.display();
     }

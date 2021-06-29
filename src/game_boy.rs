@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 use crate::game_boy::memory::MemError;
+use crate::game_boy::video::PPU;
 
 mod cpu;
 mod memory;
@@ -47,9 +48,10 @@ impl GameBoy {
         self.cpu.memory()
     }
 
-    pub fn frame(&mut self) {
+    pub fn frame(&mut self, buffer: &mut Box<[u8]>) {
         let mut clocks_left = 0;
         for line in 0..GameBoy::LINES {
+            self.cpu.memory_mut().set_ly(line as u8);
             if line < GameBoy::DRAW_LINES {
                 for clock in 0..GameBoy::CLOCKS_PER_LINE {
                     // TODO set modes
@@ -66,12 +68,15 @@ impl GameBoy {
                         clocks_left -= 1;
                     }
                 }
+                PPU::write_line(self.cpu.memory_mut(), buffer);
             } else {
-                // V-Blank
-                if clocks_left <= 0 {
-                    clocks_left = self.cpu.tick();
-                } else {
-                    clocks_left -= 1;
+                for clock in 0..GameBoy::CLOCKS_PER_LINE {
+                    // V-Blank
+                    if clocks_left <= 0 {
+                        clocks_left = self.cpu.tick();
+                    } else {
+                        clocks_left -= 1;
+                    }
                 }
             }
         }

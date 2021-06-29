@@ -319,10 +319,10 @@ impl Cpu {
         // TODO I have no idea if this is correct!
         // Set the half carry bit if borrowing from bit 4
         // This is the case if the lower nibble is zero
-        self.set_half_carry_bit(dbg!(self.reg(reg) & 0xF) == 0);
+        self.set_half_carry_bit((self.reg(reg) & 0xF) == 0);
         *self.reg_mut(reg) = self.reg(reg).overflowing_sub(1).0;
         self.set_zero_bit(self.reg(reg) == 0); // Set flag if result is zero
-        self.set_negative_bit(true); // By specification
+        self.set_negative_bit(true); // By definition
         1
     }
 
@@ -336,7 +336,7 @@ impl Cpu {
         // TODO no idea if this is correct
         // Set the half carry bit if borrowing from bit 4
         // This is the case if the lower nibble is zero
-        self.set_half_carry_bit(dbg!(val & 0xF) == 0);
+        self.set_half_carry_bit((val & 0xF) == 0);
         val = val.overflowing_sub(1).0;
 
         self.set_zero_bit(val == 0);
@@ -394,7 +394,7 @@ impl Cpu {
     /// 1 cycle
     pub(super) fn inc_r8(&mut self, reg: Register8) -> u32 {
         // TODO no idea if that is correct
-        self.set_half_carry_bit(dbg!(self.reg(reg) & 0xF) == 0xF);
+        self.set_half_carry_bit((self.reg(reg) & 0xF) == 0xF);
         self.set_negative_bit(false); // By definition
 
         *self.reg_mut(reg) = self.reg(reg) + 1;
@@ -410,11 +410,10 @@ impl Cpu {
         let hl = self.reg16(Register16::HL);
         let mut val = self.mmu.read_8(hl);
         // TODO no idea if this is correct
-        self.set_half_carry_bit(dbg!(val & 0xF) == 0xF);
+        self.set_half_carry_bit((val & 0xF) == 0xF);
         self.set_negative_bit(false); // By definition
 
-        // TODO might need overflowing add
-        val += 1;
+        val = val.overflowing_add(1).0;
 
         self.set_zero_bit(val == 0);
         // TODO so far unused MemResult
@@ -426,7 +425,7 @@ impl Cpu {
     ///
     /// 2 cycles
     pub(super) fn inc_r16(&mut self, reg: Register16) -> u32 {
-        self.write_reg16(reg, self.reg16(reg) + 1);
+        self.write_reg16(reg, self.reg16(reg).overflowing_add(1).0);
         2
     }
 

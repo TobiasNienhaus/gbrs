@@ -9,7 +9,7 @@ impl MMU {
         const DEST: u16 = 0xFE00;
         for i in 0..=0xF1 {
             let read = self.read_8(source + i);
-            self.write_8(DEST + i);
+            self.write_8(DEST + i, read);
         }
     }
 }

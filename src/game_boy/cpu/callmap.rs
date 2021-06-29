@@ -7,8 +7,15 @@ impl Cpu {
         if !self.is_running() {
             return 1;
         }
+        if self.pc == 0x0392 {
+            println!("This is happening!");
+        } else if self.pc >= 0x0380 && self.pc <= 0x0392 {
+            self.dump_flags();
+            println!("This is reached")
+        }
         let instruction = self.read_u8();
         // println!("Instruction: {:#04X} Program counter: {:#06X}", instruction, self.pc);
+        // println!("Instruction: {:#04X} PC: {:#06X} LY: {:#04X}", instruction, self.pc, self.mmu.read_ly());
 
         let cycle_count = match instruction {
             0x00 => self.nop(),
@@ -283,7 +290,11 @@ impl Cpu {
             },
             0xC7 => self.rst(ResetVec::Vec1),
             0xC8 => self.ret_cc(Condition::ZSet),
-            0xCA => self.ret(),
+            0xC9 => self.ret(),
+            0xCA => {
+                let param = self.read_u16();
+                self.jp_cc(Condition::ZSet, param)
+            }
             0xCB => self.execute_cb(), // TODO Should there be one cycle added?
             0xCC => {
                 let param = self.read_u16();

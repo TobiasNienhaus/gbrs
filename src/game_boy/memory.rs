@@ -1,4 +1,4 @@
-use crate::game_boy::memory::rom::RomError;
+use rom::RomError;
 use std::convert::TryInto;
 use std::ops::Range;
 use std::path::PathBuf;
@@ -155,7 +155,7 @@ impl MMU {
                 Ok(self.rom.read_16(address))
             } else {
                 let a = address as usize - 0x8000;
-                Ok(u16::from_le_bytes(self.mem[a..a + 1].try_into().unwrap()))
+                Ok(u16::from_le_bytes(self.mem[a..a + 2].try_into().unwrap()))
             }
         }
     }
@@ -173,5 +173,16 @@ impl MMU {
             self.mem[address as usize + 1] = bytes[1];
             Ok(())
         }
+    }
+
+    pub fn read_128(&self, address: u16) -> u128 {
+        if MMU::ROM_REGION.contains(&address) {
+            todo!()
+        } else {
+            let address = (address as usize) - 0x8000; // Subtract ROM region
+            u128::from_le_bytes(self.mem[address as usize..address as usize + 16].try_into().unwrap())
+        }
+        // TODO correctly handle errors, etc. (over boundary write, etc.)
+        // Read the next 16 bytes from memory and put them in a u128
     }
 }
