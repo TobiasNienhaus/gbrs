@@ -97,6 +97,27 @@ pub enum ResetVec {
     Vec8
 }
 
+#[derive(Copy, Clone)]
+pub enum Interrupt {
+    VBlank,
+    LcdcStatus,
+    TimerOverflow,
+    SerialTransferCompletion,
+    Input
+}
+
+impl Interrupt {
+    /// The address to jump to when the interrupt occurs
+    pub fn jump_address(&self) -> u16 {
+        todo!()
+    }
+
+    /// The bit of the IF flag register for the specific interrupt
+    pub fn if_bit(&self) -> u8 {
+        todo!()
+    }
+}
+
 fn check_bit(val: u8, bit: u8) -> bool {
     ((val >> bit) & 0x1) == 0x1
 }
