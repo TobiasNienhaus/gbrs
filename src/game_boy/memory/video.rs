@@ -319,3 +319,33 @@ impl MMU {
         Palette::from_byte(self.read_8(MMU::SPRITE_PALETTE_1))
     }
 }
+
+pub struct Tile {
+    colors: [[u8; 8]; 8]
+}
+
+impl Tile {
+    /// A tile is 16 bytes, with 2 bits per color
+    fn from_u128(bytes: u128) -> Tile {
+        // TODO is this at all correct?
+        let mut colors = [[0u8; 8]; 8];
+        for (idx, b) in bytes.to_le_bytes().iter().enumerate() {
+            let line = idx / 2;
+            let low_bit = idx % 2 == 0; // Or is it 1?
+            for bit in 0..8 {
+                if low_bit {
+                    colors[line][bit] |= (b >> bit) & 0b1;
+                } else {
+                    colors[line][bit] |= ((b >> bit) & 0b1) << 1;
+                }
+            }
+        }
+        Tile {
+            colors
+        }
+    }
+
+    fn from_bytes(bytes: [u8; 16]) -> Tile {
+        Tile::from_u128(u128::from_le_bytes(bytes))
+    }
+}
