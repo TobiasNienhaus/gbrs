@@ -286,24 +286,26 @@ impl Cpu {
         let mut correction: u8 = 0;
         let mut set_carry = false;
 
+        let negative = self.negative_bit();
+
         let mut val = self.a_reg() as i16;
 
-        if self.half_carry_bit() || (!self.negative_bit() && (val & 0xF) > 9) {
+        if self.half_carry_bit() || (!negative && (val & 0xF) > 9) {
             correction |= 0x6;
         }
 
-        if self.carry_bit() || (!self.negative_bit() && (val > 0x99)) {
+        if self.carry_bit() || (!negative && (val > 0x99)) {
             correction |= 0x60;
             set_carry = true;
         }
 
         let correction = correction as i16;
 
-        val += if self.negative_bit() { -correction } else { correction };
+        val += if negative { -correction } else { correction };
 
-        let val = (val & 0xFF) as u8; // This should be the same as %= 0xFF
+        let val = (val as u16 & 0xFF) as u8; // This should be the same as %= 0xFF
 
-        self.set_half_carry_bit(false);
+        self.set_half_carry_bit(false); // By definition
         self.set_carry_bit(set_carry);
         self.set_zero_bit(val == 0);
 
