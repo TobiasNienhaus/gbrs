@@ -1,15 +1,15 @@
 Commands setting a flag
-Command           | Z | N | H | C |
+Command           | Z | N | H | C | checked
 -----------------------------------
-INC r8            | X | 0 | H |   |
-INC [HL]          | X | 0 | H |   |
-DEC r8            | X | 1 | H |   |
-DEC [HL]          | X | 1 | H |   |
-RLCA              | 0 | 0 | 0 | C |
-ADD HL,r16        |   | 0 | H | C |
-ADD HL,SP         |   | 0 | H | C |
-RRCA              | 0 | 0 | 0 | C |
-RLA               | 0 | 0 | 0 | C |
+INC r8            | Z | 0 | H |   | X
+INC [HL]          | Z | 0 | H |   | X
+DEC r8            | Z | 1 | H |   | X
+DEC [HL]          | Z | 1 | H |   | X
+RLCA              | 0 | 0 | 0 | C | X (only difference to normal rotation thing, is the zero flag)
+ADD HL,r16        |   | 0 | H | C | X This one had issues
+ADD HL,SP         |   | 0 | H | C | X This one has issues
+RRCA              | 0 | 0 | 0 | C | X
+RLA               | 0 | 0 | 0 | C | X
 RRA               | 0 | 0 | 0 | C |
 DAA               | Z |   | 0 | C |
 CPL               |   | 1 | 1 |   |
