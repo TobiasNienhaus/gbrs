@@ -641,7 +641,9 @@ impl Cpu {
     /// 2 cycles
     pub(super) fn ld_a_to_hl_and_inc(&mut self) -> u32 {
         self.ld_r8_to_hl(Register8::A);
-        self.inc_hl();
+        // self.inc_hl();
+        let new_val = self.reg16(Register16::HL).overflowing_add(1).0;
+        self.write_reg16(Register16::HL, new_val);
         2
     }
 
