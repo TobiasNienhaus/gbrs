@@ -698,27 +698,20 @@ impl Cpu {
     ///
     /// 3 cycles
     pub(super) fn ld_sp_plus_e8_to_hl(&mut self, e8: i8) -> u32 {
+        let e8_byte = e8.to_le_bytes()[0];
         let res = if e8 < 0 {
-            let add = e8 as u8;
-            let (res, _) = self.sp.overflowing_add(add as u16);
-            // TODO check if flags are correctly set
-            self.set_carry_bit((
-                (self.sp & 0xFF) +
-                    (add as u16)
-            ) > 0xFF);
-            self.set_half_carry_bit((
-                (self.sp & 0xF) +
-                    (add as u16 & 0xF)
-            ) > 0xF);
+            let add = e8 as u16;
+            let res = self.sp.overflowing_add(add).0;
             res
         } else {
-            // I think if the jump is subtracting, the overflow flags are set to zero
-            self.set_half_carry_bit(false);
-            self.set_carry_bit(false);
             let sub = (-e8) as u16;
-            let (res, _) = self.sp.overflowing_sub(sub);
+            let res = self.sp.overflowing_sub(sub).0;
             res
         };
+        // TODO what is this witchcraft?
+        self.set_carry_bit(((self.sp ^ e8_byte as u16 ^ (res & 0xFFFF)) & 0x100) == 0x100);
+        // TODO what is this witchcraft?
+        self.set_half_carry_bit(((self.sp ^ e8_byte as u16 ^ (res & 0xFFFF)) & 0x10) == 0x10);
         self.set_zero_bit(false); // By definition
         self.set_negative_bit(false); // By definition
 
