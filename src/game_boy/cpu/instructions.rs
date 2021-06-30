@@ -314,7 +314,6 @@ impl Cpu {
     ///
     /// 1 cycle
     pub(super) fn dec_r8(&mut self, reg: Register8) -> u32 {
-        // TODO I have no idea if this is correct!
         // Set the half carry bit if borrowing from bit 4
         // This is the case if the lower nibble is zero
         self.set_half_carry_bit((self.reg(reg) & 0xF) == 0);
@@ -331,7 +330,6 @@ impl Cpu {
         let hl = self.reg16(Register16::HL);
         let mut val = self.mmu.read_8(hl);
 
-        // TODO no idea if this is correct
         // Set the half carry bit if borrowing from bit 4
         // This is the case if the lower nibble is zero
         self.set_half_carry_bit((val & 0xF) == 0);
@@ -391,7 +389,8 @@ impl Cpu {
     ///
     /// 1 cycle
     pub(super) fn inc_r8(&mut self, reg: Register8) -> u32 {
-        // TODO no idea if that is correct
+        // Set half carry, if the instruction would overflow after the 3rd bit
+        // This means the first nibble is completely set, so 0xF
         self.set_half_carry_bit((self.reg(reg) & 0xF) == 0xF);
         self.set_negative_bit(false); // By definition
 
@@ -407,7 +406,8 @@ impl Cpu {
     pub(super) fn inc_hl(&mut self) -> u32 {
         let hl = self.reg16(Register16::HL);
         let mut val = self.mmu.read_8(hl);
-        // TODO no idea if this is correct
+        // Set half carry, if the instruction would overflow after the 3rd bit
+        // This means the first nibble is completely set, so 0xF
         self.set_half_carry_bit((val & 0xF) == 0xF);
         self.set_negative_bit(false); // By definition
 
