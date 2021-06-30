@@ -123,13 +123,13 @@ impl Cpu {
     /// 4 cycles
     pub(super) fn add_e8_to_sp(&mut self, e8: i8) -> u32 {
         // https://github.com/aidan-clyens/GBExperience/blob/master/src/cpu/cpu_alu.cpp#L375-L387
-        let res = (self.sp as i32 + e8 as i32) as u16; // TODO check out
+        let res = (self.sp as i32 + e8 as i32) as u16;
 
         // Normal casting doesn't do the correct thing
         let e8_byte = e8.to_le_bytes()[0];
 
-        // Reset flag register
-        *self.f_reg_mut() = 0;
+        self.set_zero_bit(false); // By definition
+        self.set_negative_bit(false); // By definition
         // TODO WTF???
         self.set_carry_bit((self.sp ^ (e8_byte as u16) ^ (res & 0xFFFF)) & 0x100 == 0x100);
         // TODO WTF???
