@@ -162,9 +162,10 @@ impl Cpu {
         let res = self.a_reg() & n8;
 
         // Reset flag register
-        *self.f_reg_mut() = 0;
+        self.set_negative_bit(false); // By definition
         self.set_zero_bit(res == 0); // Set if result is zero
         self.set_half_carry_bit(true); // By definition
+        self.set_carry_bit(false); // By definition
 
         *self.a_reg_mut() = res;
         2
