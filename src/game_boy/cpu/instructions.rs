@@ -104,12 +104,10 @@ impl Cpu {
         let hl = self.reg16(Register16::HL);
         let (res, overflow) = hl.overflowing_add(n16);
 
-        let half_overflow = (
-            (hl & 0xFFF) +
-                (n16 & 0xFFF)
-        ) > 0xF; // Does adding the lower half of the numbers (plus carry) overflow?
+        // Does adding the lower half of the numbers (plus carry) overflow?
+        let half_overflow = ((hl & 0xFFF) + (n16 & 0xFFF)) > 0xFFF;
 
-        *self.f_reg_mut() = 0; // Reset flag register
+        self.set_negative_bit(false); // By definition
 
         self.set_carry_bit(overflow); // Did the calculation overflow
         self.set_half_carry_bit(half_overflow); // See half_overflow
