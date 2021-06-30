@@ -52,6 +52,7 @@ impl CliOpts {
 }
 
 fn main() {
+    println!("Mem region: {:?}", game_boy::memory::MemRegion::get_region(0xC3C8));
     let opts = CliOpts::load();
     let mut gb = game_boy::GameBoy::load(&opts.rom_path.into()).unwrap();
 

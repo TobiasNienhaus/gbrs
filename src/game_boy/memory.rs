@@ -26,7 +26,7 @@ const MEM_SIZE: usize = 0x10000;
 const NON_ROM_SIZE: usize = 0x10000 - 0x8000;
 
 /// The memory region
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum MemRegion {
     /// External Bus ROM Region
     Rom,
@@ -130,6 +130,9 @@ impl MMU {
 
     // TODO maybe just return bool?
     pub fn write_8(&mut self, address: u16, val: u8) -> MemResult<()> {
+        if address == 0xDFE0 {
+            println!("--------------\nWriting {:#04X} to oxDFE0", val);
+        }
         // TODO there are some special addresses with specific behavior
         // 0xFF46 -> Transfer ROM or RAM to OAM
         if address == MMU::DMA {

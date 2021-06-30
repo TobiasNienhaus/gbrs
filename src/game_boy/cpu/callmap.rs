@@ -2,20 +2,73 @@ use super::*;
 use super::instructions::*;
 use std::net::Shutdown::Read;
 
+static mut FLAG: bool = false;
+const FLAG_SET_PC: u16 = 0x69E0;
+
 impl Cpu {
     pub fn tick(&mut self) -> u32 {
         if !self.is_running() {
+            // println!("HALTED");
             return 1;
         }
-        if self.pc == 0x0392 {
-            println!("This is happening!");
-        } else if self.pc >= 0x0380 && self.pc <= 0x0392 {
-            self.dump_flags();
-            println!("This is reached")
+        let instruction = self.peek_u8();
+        if self.pc == FLAG_SET_PC {
+            // self.dump_flags();
+            // println!("HL register {:#06X}", self.reg16(Register16::HL));
+            // println!("Instruction: {:#04X} PC: {:#06X} LY: {:#04X}", instruction, self.pc - 1, self.mmu.read_ly());
+            // println!("Another thing");
+            unsafe {
+                FLAG = true;
+            }
+        }
+        if self.pc == 0x69E0 {
+            println!("Memory dump!");
+            for add in 0xDFE0..0xDFEF {
+                println!("{:#06X}: {:#04X}", add, self.mmu.read_8(add));
+            }
+            println!("DE is {:#06X} [DE] is {:#04X}",
+                     self.reg16(Register16::DE),
+                     self.mmu.read_8(self.reg16(Register16::DE))
+            )
+        }
+        // if self.pc >= 0x69F0 && self.pc <= 0x69FC
+        if self.pc <= 0x8000 && self.pc >= 0x6000 {
+            // println!("Instruction: {:#04X} PC: {:#06X} A reg {:#04X} Z {} N {} H {} C {}",
+            //          instruction, self.pc,
+            //          self.reg(Register8::A),
+            //          self.zero_bit(),
+            //          self.negative_bit(),
+            //          self.half_carry_bit(),
+            //          self.carry_bit()
+            // );
+        }
+        // if self.pc - 1 == 0x0386 {
+        //     self.dump_flags();
+        //     println!("Instruction: {:#04X} PC: {:#06X} LY: {:#04X}", instruction, self.pc - 1, self.mmu.read_ly());
+        //     println!("Another thing");
+        // }
+        // if self.pc - 1 == 0x0392 {
+        //     println!("This is happening!");
+        // } else if self.pc >= 0x0380 - 1 && self.pc - 1 <= 0x0392 {
+        //     self.dump_flags();
+        //     println!("Instruction: {:#04X} PC: {:#06X} LY: {:#04X}", instruction, self.pc - 1, self.mmu.read_ly());
+        //     println!("This is reached");
+        // }
+        // println!("Instruction: {:#04X} Program counter: {:#06X}", instruction, self.pc);
+        unsafe {
+            if FLAG {
+                // println!("Instruction: {:#04X} PC: {:#06X} Z {} N {} H {} C {}",
+                //          instruction, self.pc,
+                //          self.zero_bit(),
+                //          self.negative_bit(),
+                //          self.half_carry_bit(),
+                //          self.carry_bit()
+                // );
+                // // println!("Instruction: {:#04X} PC: {:#06X} LY: {:#04X}", instruction, self.pc, self.mmu.read_ly());
+                // print!("");
+            }
         }
         let instruction = self.read_u8();
-        // println!("Instruction: {:#04X} Program counter: {:#06X}", instruction, self.pc);
-        // println!("Instruction: {:#04X} PC: {:#06X} LY: {:#04X}", instruction, self.pc, self.mmu.read_ly());
 
         let cycle_count = match instruction {
             0x00 => self.nop(),
@@ -97,8 +150,14 @@ impl Cpu {
             },
             0x27 => self.daa(),
             0x28 => {
+                // I think this is not firing correctly
                 let param = self.read_i8();
-                self.jr_cc(Condition::ZSet, param)
+                // println!("Jumping by {}", param);
+                // println!("Zero flag is set: {}", self.zero_bit());
+                // println!("Will jump: {}", self.check_condition(Condition::ZSet));
+                let res = self.jr_cc(Condition::ZSet, param);
+                // println!("Shit");
+                res
             },
             0x29 => self.add_r16_to_hl(Register16::HL),
             0x2A => self.ld_hl_to_a_and_inc(),
@@ -381,6 +440,7 @@ impl Cpu {
             0xF7 => self.rst(ResetVec::Vec7),
             0xF8 => {
                 let param = self.read_i8();
+                println!("Loading SP plus e8 to HL");
                 self.ld_sp_plus_e8_to_hl(param)
             },
             0xF9 => self.ld_hl_to_sp(),

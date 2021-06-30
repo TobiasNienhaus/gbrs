@@ -3,7 +3,7 @@ use crate::game_boy::memory::MemError;
 use crate::game_boy::video::PPU;
 
 mod cpu;
-mod memory;
+pub mod memory;
 mod video;
 
 #[derive(Debug)]

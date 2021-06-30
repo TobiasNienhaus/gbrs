@@ -27,7 +27,7 @@ impl Cpu {
         Cpu {
             registers: [0u8; 8],
             pc: 0x0100,
-            sp: 0,
+            sp: 0xFFFE,
             mmu,
             interrupts_enabled: false,
             halted: false,
@@ -311,8 +311,12 @@ impl Cpu {
 }
 
 impl Cpu {
+    fn peek_u8(&self) -> u8 {
+        self.mmu.read_8(self.pc)
+    }
+
     fn read_u8(&mut self) -> u8 {
-        let ret = self.mmu.read_8(self.pc);
+        let ret = self.peek_u8();
         self.pc += 1;
         ret
     }

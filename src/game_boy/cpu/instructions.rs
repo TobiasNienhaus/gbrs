@@ -254,6 +254,8 @@ impl Cpu {
     ///
     /// 2 cycles
     pub(super) fn cp(&mut self, n8: u8) -> u32 {
+        // TODO This one doesn't set the flags correctly
+        // specifically the half carry and the carry flag
         let a = self.a_reg();
         self.set_zero_bit(a == n8); // Result is only zero, if A == n8
         self.set_negative_bit(true);
@@ -706,6 +708,9 @@ impl Cpu {
             let res = self.sp.overflowing_sub(sub).0;
             res
         };
+        // Maybe these work better?
+        // F.h = (((SP & 0xF) + (T1 & 0xF)) > 0xF);
+        // F.c = (((SP & 0xFF) + (T1 & 0xFF)) > 0xFF);
         // TODO what is this witchcraft?
         self.set_carry_bit(((self.sp ^ e8_byte as u16 ^ (res & 0xFFFF)) & 0x100) == 0x100);
         // TODO what is this witchcraft?
@@ -849,7 +854,9 @@ impl Cpu {
         self.inc_sp();
         let high_byte = self.mmu.read_8(self.sp);
         self.inc_sp();
-        self.pc = u16::from_le_bytes([low_byte, high_byte]);
+        // self.pc = u16::from_le_bytes([low_byte, high_byte]);
+        // self.pc = u16::from_le_bytes([high_byte, low_byte]);
+        self.pc = ((high_byte as u16) << 8) | low_byte as u16;
         4
     }
 
