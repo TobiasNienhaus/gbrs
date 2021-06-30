@@ -1374,7 +1374,8 @@ impl Cpu {
         self.set_zero_bit(a == n8); // Result is only zero, if A == n8
         self.set_negative_bit(true); // By definition
         // Result of lower nibble would have to borrow
-        self.set_half_carry_bit((n8 & 0xF) > (a & 0xF));
+        // Very straight forward (and maybe not too fast) solution
+        self.set_half_carry_bit(((a & 0xF) as i16 - (n8 & 0xF) as i16) < 0);
         self.set_carry_bit(n8 > a); // Result would have to borrow
         *self.reg_mut(Register8::A) = a.overflowing_sub(n8).0;
         2
