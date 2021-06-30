@@ -928,9 +928,7 @@ impl Cpu {
         n8 <<= 1;
         // OR the carry back in
         n8 |= carry;
-        if n8 == 0 {
-            self.set_zero_bit(true);
-        }
+        self.set_zero_bit(n8 == 0);
         self.set_half_carry_bit(false); // By definition
         self.set_negative_bit(false); // By definition
         n8
@@ -985,9 +983,7 @@ impl Cpu {
         n8 <<= 1;
         // OR the carry back in
         n8 |= truncated;
-        if n8 == 0 {
-            self.set_zero_bit(true);
-        }
+        self.set_zero_bit(n8 == 0);
         self.set_half_carry_bit(false); // By definition
         self.set_negative_bit(false); // By definition
         n8
@@ -1043,9 +1039,7 @@ impl Cpu {
         n8 >>= 1;
         // OR the carry back in
         n8 |= carry << 7;
-        if n8 == 0 {
-            self.set_zero_bit(true);
-        }
+        self.set_zero_bit(n8 == 0);
         self.set_half_carry_bit(false); // By definition
         self.set_negative_bit(false); // By definition
         n8
@@ -1100,9 +1094,7 @@ impl Cpu {
         n8 >>= 1;
         // OR the carry back in
         n8 |= truncated << 7;
-        if n8 == 0 {
-            self.set_zero_bit(true);
-        }
+        self.set_zero_bit(n8 == 0);
         self.set_half_carry_bit(false); // By definition
         self.set_negative_bit(false); // By definition
         n8
@@ -1231,9 +1223,7 @@ impl Cpu {
         n8 <<= 1;
         // OR the carry back in
         n8 |= truncated;
-        if n8 == 0 {
-            self.set_zero_bit(true);
-        }
+        self.set_zero_bit(n8 == 0);
         self.set_half_carry_bit(false); // By definition
         self.set_negative_bit(false); // By definition
         n8
@@ -1280,9 +1270,7 @@ impl Cpu {
         n8 >>= 1;
         // OR the last digit back in
         n8 |= last << 7;
-        if n8 == 0 {
-            self.set_zero_bit(true);
-        }
+        self.set_zero_bit(n8 == 0);
         self.set_half_carry_bit(false); // By definition
         self.set_negative_bit(false); // By definition
         n8
@@ -1327,9 +1315,7 @@ impl Cpu {
         n8 >>= 1;
         // OR the last digit back in
         n8 |= first << 7;
-        if n8 == 0 {
-            self.set_zero_bit(true);
-        }
+        self.set_zero_bit(n8 == 0);
         self.set_half_carry_bit(false); // By definition
         self.set_negative_bit(false); // By definition
         n8
