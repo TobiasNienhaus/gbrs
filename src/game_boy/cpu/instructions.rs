@@ -33,8 +33,6 @@ impl Cpu {
                 self.carry_bit() as u8
         ) > 0xF; // Does adding the lower half of the numbers (plus carry) overflow?
 
-        *self.f_reg_mut() = 0; // Reset flag register
-
         self.set_carry_bit(overflow); // Did the calculation overflow
         self.set_half_carry_bit(half_overflow); // See half_overflow
         self.set_zero_bit(res == 0); // Is the result zero
@@ -71,8 +69,6 @@ impl Cpu {
             (self.a_reg() & 0xF) +
                 (n8 & 0xF)
         ) > 0xF; // Does adding the lower half of the numbers overflow the lower nibble?
-
-        *self.f_reg_mut() = 0; // Reset flag register
 
         self.set_carry_bit(overflow); // Did the calculation overflow
         self.set_half_carry_bit(half_overflow); // See half_overflow
