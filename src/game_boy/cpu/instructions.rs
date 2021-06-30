@@ -261,8 +261,7 @@ impl Cpu {
         let a = self.a_reg();
         self.set_zero_bit(a == n8); // Result is only zero, if A == n8
         self.set_negative_bit(true);
-        // Result of lower nibble would have to borrow
-        self.set_half_carry_bit((n8 & 0xF) > (a & 0xF));
+        self.set_half_carry_bit(((a & 0xF) as i16 - (n8 & 0xF) as i16) < 0);
         self.set_carry_bit(n8 > a); // Result would have to borrow
         2
     }
