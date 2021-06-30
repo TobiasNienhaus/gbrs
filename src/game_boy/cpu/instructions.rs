@@ -765,9 +765,9 @@ impl Cpu {
     pub(super) fn or(&mut self, n8: u8) -> u32 {
         let res = self.a_reg() | n8;
         self.set_zero_bit(res == 0);
-        self.set_half_carry_bit(false);
-        self.set_carry_bit(false);
-        self.set_negative_bit(false);
+        self.set_half_carry_bit(false); // By definition
+        self.set_carry_bit(false); // By definition
+        self.set_negative_bit(false); // By definition
         *self.a_reg_mut() = res;
         2
     }
