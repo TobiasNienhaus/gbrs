@@ -1,17 +1,21 @@
 use super::*;
-use super::instructions::*;
-use std::net::Shutdown::Read;
 
 static mut FLAG: bool = false;
 const FLAG_SET_PC: u16 = 0x69E0;
 
 impl Cpu {
     pub fn tick(&mut self) -> u32 {
+        // TODO First interrupt then halt?
+        if self.handle_interrupts() {
+            println!("Handled Interrupt");
+            return 5;
+        }
         if !self.is_running() {
             // println!("HALTED");
             return 1;
         }
-        let instruction = self.peek_u8();
+        // println!("PC: {}", self.pc);
+
         if self.pc == FLAG_SET_PC {
             // self.dump_flags();
             // println!("HL register {:#06X}", self.reg16(Register16::HL));
@@ -26,9 +30,10 @@ impl Cpu {
             for add in 0xDFE0..0xDFEF {
                 println!("{:#06X}: {:#04X}", add, self.mmu.read_8(add));
             }
-            println!("DE is {:#06X} [DE] is {:#04X}",
-                     self.reg16(Register16::DE),
-                     self.mmu.read_8(self.reg16(Register16::DE))
+            println!(
+                "DE is {:#06X} [DE] is {:#04X}",
+                self.reg16(Register16::DE),
+                self.mmu.read_8(self.reg16(Register16::DE))
             )
         }
         // if self.pc >= 0x69F0 && self.pc <= 0x69FC
@@ -75,7 +80,7 @@ impl Cpu {
             0x01 => {
                 let param = self.read_u16();
                 self.ld_const16_to_r16(Register16::BC, param)
-            },
+            }
             0x02 => self.ld_a_to_r16addr(Register16::BC),
             0x03 => self.inc_r16(Register16::BC),
             0x04 => self.inc_r8(Register8::B),
@@ -83,12 +88,12 @@ impl Cpu {
             0x06 => {
                 let param = self.read_u8();
                 self.ld_const8_to_r8(Register8::B, param)
-            },
+            }
             0x07 => self.rlca(),
             0x08 => {
                 let param = self.read_u16();
                 self.ld_sp_to_const16addr(param)
-            },
+            }
             0x09 => self.add_r16_to_hl(Register16::BC),
             0x0A => self.ld_r16addr_to_a(Register16::BC),
             0x0B => self.dec_r16(Register16::BC),
@@ -97,7 +102,7 @@ impl Cpu {
             0x0E => {
                 let param = self.read_u8();
                 self.ld_const8_to_r8(Register8::C, param)
-            },
+            }
             0x0F => self.rrca(),
             0x10 => {
                 self.pc += 1; // STOP reads two bytes
@@ -108,7 +113,7 @@ impl Cpu {
             0x11 => {
                 let param = self.read_u16();
                 self.ld_const16_to_r16(Register16::DE, param)
-            },
+            }
             0x12 => self.ld_a_to_r16addr(Register16::DE),
             0x13 => self.inc_r16(Register16::DE),
             0x14 => self.inc_r8(Register8::D),
@@ -116,12 +121,12 @@ impl Cpu {
             0x16 => {
                 let param = self.read_u8();
                 self.ld_const8_to_r8(Register8::D, param)
-            },
+            }
             0x17 => self.rla(),
             0x18 => {
                 let param = self.read_i8();
                 self.jr(param)
-            },
+            }
             0x19 => self.add_r16_to_hl(Register16::DE),
             0x1A => self.ld_r16addr_to_a(Register16::DE),
             0x1B => self.dec_r16(Register16::DE),
@@ -130,16 +135,16 @@ impl Cpu {
             0x1E => {
                 let param = self.read_u8();
                 self.ld_const8_to_r8(Register8::E, param)
-            },
+            }
             0x1F => self.rra(),
             0x20 => {
                 let param = self.read_i8();
                 self.jr_cc(Condition::ZNotSet, param)
-            },
+            }
             0x21 => {
                 let param = self.read_u16();
                 self.ld_const16_to_r16(Register16::HL, param)
-            },
+            }
             0x22 => self.ld_a_to_hl_and_inc(),
             0x23 => self.inc_r16(Register16::HL),
             0x24 => self.inc_r8(Register8::H),
@@ -147,7 +152,7 @@ impl Cpu {
             0x26 => {
                 let param = self.read_u8();
                 self.ld_const8_to_r8(Register8::H, param)
-            },
+            }
             0x27 => self.daa(),
             0x28 => {
                 // I think this is not firing correctly
@@ -158,7 +163,7 @@ impl Cpu {
                 let res = self.jr_cc(Condition::ZSet, param);
                 // println!("Shit");
                 res
-            },
+            }
             0x29 => self.add_r16_to_hl(Register16::HL),
             0x2A => self.ld_hl_to_a_and_inc(),
             0x2B => self.dec_r16(Register16::HL),
@@ -167,16 +172,16 @@ impl Cpu {
             0x2E => {
                 let param = self.read_u8();
                 self.ld_const8_to_r8(Register8::L, param)
-            },
+            }
             0x2F => self.cpl(),
             0x30 => {
                 let param = self.read_i8();
                 self.jr_cc(Condition::CNotSet, param)
-            },
+            }
             0x31 => {
                 let param = self.read_u16();
                 self.ld_const16_to_sp(param)
-            },
+            }
             0x32 => self.ld_a_to_hl_and_dec(),
             0x33 => self.inc_sp(),
             0x34 => self.inc_hl(),
@@ -184,12 +189,12 @@ impl Cpu {
             0x36 => {
                 let param = self.read_u8();
                 self.ld_const8_to_hl(param)
-            },
+            }
             0x37 => self.scf(),
             0x38 => {
                 let param = self.read_i8();
                 self.jr_cc(Condition::CSet, param)
-            },
+            }
             0x39 => self.add_sp_to_hl(),
             0x3A => self.ld_hl_to_a_and_dec(),
             0x3B => self.dec_sp(),
@@ -198,7 +203,7 @@ impl Cpu {
             0x3E => {
                 let param = self.read_u8();
                 self.ld_const8_to_r8(Register8::A, param)
-            },
+            }
             0x3F => self.ccf(),
             0x40 => self.ld_r8_to_r8(Register8::B, Register8::B),
             0x41 => self.ld_r8_to_r8(Register8::B, Register8::C),
@@ -333,20 +338,20 @@ impl Cpu {
             0xC2 => {
                 let param = self.read_u16();
                 self.jp_cc(Condition::ZNotSet, param)
-            },
+            }
             0xC3 => {
                 let param = self.read_u16();
                 self.jp(param)
-            },
+            }
             0xC4 => {
                 let param = self.read_u16();
                 self.call_cc(Condition::ZNotSet, param)
-            },
+            }
             0xC5 => self.push_r16(Register16::BC),
             0xC6 => {
                 let param = self.read_u8();
                 self.add(param)
-            },
+            }
             0xC7 => self.rst(ResetVec::Vec1),
             0xC8 => self.ret_cc(Condition::ZSet),
             0xC9 => self.ret(),
@@ -358,77 +363,77 @@ impl Cpu {
             0xCC => {
                 let param = self.read_u16();
                 self.call_cc(Condition::ZSet, param)
-            },
+            }
             0xCD => {
                 let param = self.read_u16();
                 self.call(param)
-            },
+            }
             0xCE => {
                 let param = self.read_u8();
                 self.adc(param)
-            },
+            }
             0xCF => self.rst(ResetVec::Vec2),
             0xD0 => self.ret_cc(Condition::CNotSet),
             0xD1 => self.pop_r16(Register16::DE),
             0xD2 => {
                 let param = self.read_u16();
                 self.jp_cc(Condition::CNotSet, param)
-            },
+            }
             0xD4 => {
                 let param = self.read_u16();
                 self.call_cc(Condition::CNotSet, param)
-            },
+            }
             0xD5 => self.push_r16(Register16::DE),
             0xD6 => {
                 let param = self.read_u8();
                 self.sub(param)
-            },
+            }
             0xD7 => self.rst(ResetVec::Vec3),
             0xD8 => self.ret_cc(Condition::CSet),
             0xD9 => self.reti(),
             0xDA => {
                 let param = self.read_u16();
                 self.jp_cc(Condition::CSet, param)
-            },
+            }
             0xDC => {
                 let param = self.read_u16();
                 self.call_cc(Condition::CSet, param)
-            },
+            }
             0xDE => {
                 let param = self.read_u8();
                 self.sbc(param)
-            },
+            }
             0xDF => self.rst(ResetVec::Vec4),
             0xE0 => {
                 let param = self.read_u8();
                 self.ldh_a_to_const16addr(0xFF00 + (param as u16))
-            },
+            }
             0xE1 => self.pop_r16(Register16::HL),
             0xE2 => self.ldh_a_to_ff00_plus_c(),
             0xE5 => self.push_r16(Register16::HL),
             0xE6 => {
                 let param = self.read_u8();
                 self.and(param)
-            },
+            }
             0xE7 => self.rst(ResetVec::Vec5),
             0xE8 => {
                 let param = self.read_i8();
                 self.add_e8_to_sp(param)
-            },
+            }
             0xE9 => self.jp_hl(),
             0xEA => {
                 let param = self.read_u16();
                 self.ld_a_to_const16addr(param)
-            },
+            }
             0xEE => {
                 let param = self.read_u8();
                 self.xor(param)
-            },
+            }
             0xEF => self.rst(ResetVec::Vec6),
             0xF0 => {
                 let param = self.read_u8();
                 self.ldh_const16addr_to_a(0xFF00 + (param as u16))
-            },
+            }
             0xF1 => self.pop_af(),
             0xF2 => self.ldh_ff00_plus_c_to_a(),
             0xF3 => self.di(),
@@ -436,25 +441,25 @@ impl Cpu {
             0xF6 => {
                 let param = self.read_u8();
                 self.or(param)
-            },
+            }
             0xF7 => self.rst(ResetVec::Vec7),
             0xF8 => {
                 let param = self.read_i8();
                 println!("Loading SP plus e8 to HL");
                 self.ld_sp_plus_e8_to_hl(param)
-            },
+            }
             0xF9 => self.ld_hl_to_sp(),
             0xFA => {
                 let param = self.read_u16();
                 self.ld_const16addr_to_a(param)
-            },
+            }
             0xFB => self.ei(),
             0xFE => {
                 let param = self.read_u8();
                 self.cp(param)
-            },
+            }
             0xFF => self.rst(ResetVec::Vec8),
-            _ => unreachable!("{:#04X} is not a valid instruction code", instruction)
+            _ => unreachable!("{:#04X} is not a valid instruction code", instruction),
         };
         cycle_count
     }
@@ -719,7 +724,7 @@ impl Cpu {
             0xFD => self.set_r8(Register8::L, 7),
             0xFE => self.set_hl(7),
             0xFF => self.set_r8(Register8::A, 7),
-            _ => unreachable!("{:#04X} is not a valid CB instruction code", instruction)
+            _ => unreachable!("{:#04X} is not a valid CB instruction code", instruction),
         };
         cycle_count
     }

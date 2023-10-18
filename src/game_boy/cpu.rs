@@ -1,11 +1,13 @@
-mod instructions;
 pub mod callmap;
+mod instructions;
 pub use callmap::*;
+mod interrupts;
+pub mod time;
 
 use super::memory::MMU;
 
 pub(super) struct Cpu {
-    registers: [u8;8],
+    registers: [u8; 8],
     // a_reg: u8, // Accumulator
     // flag_reg: u8,
     // b_reg: u8,
@@ -20,6 +22,8 @@ pub(super) struct Cpu {
     interrupts_enabled: bool,
     halted: bool,
     stopped: bool,
+    clock_counter_divider: u32,
+    clock_counter: u32,
 }
 
 impl Cpu {
@@ -31,7 +35,9 @@ impl Cpu {
             mmu,
             interrupts_enabled: false,
             halted: false,
-            stopped: false
+            stopped: false,
+            clock_counter_divider: 0,
+            clock_counter: 0,
         }
     }
 
@@ -53,14 +59,14 @@ enum Register8 {
     D,
     E,
     H,
-    L
+    L,
 }
 
 #[derive(Copy, Clone)]
 enum Register16 {
     BC,
     DE,
-    HL
+    HL,
 }
 
 impl Register16 {
@@ -72,7 +78,7 @@ impl Register16 {
         match self {
             Register16::BC => (Register8::C, Register8::B),
             Register16::DE => (Register8::E, Register8::D),
-            Register16::HL => (Register8::L, Register8::H)
+            Register16::HL => (Register8::L, Register8::H),
         }
     }
 }
@@ -81,7 +87,7 @@ pub enum Condition {
     ZSet,
     ZNotSet,
     CSet,
-    CNotSet
+    CNotSet,
 }
 
 #[derive(Copy, Clone)]
@@ -94,28 +100,7 @@ pub enum ResetVec {
     Vec5,
     Vec6,
     Vec7,
-    Vec8
-}
-
-#[derive(Copy, Clone)]
-pub enum Interrupt {
-    VBlank,
-    LcdcStatus,
-    TimerOverflow,
-    SerialTransferCompletion,
-    Input
-}
-
-impl Interrupt {
-    /// The address to jump to when the interrupt occurs
-    pub fn jump_address(&self) -> u16 {
-        todo!()
-    }
-
-    /// The bit of the IF flag register for the specific interrupt
-    pub fn if_bit(&self) -> u8 {
-        todo!()
-    }
+    Vec8,
 }
 
 fn check_bit(val: u8, bit: u8) -> bool {
@@ -296,7 +281,7 @@ impl Cpu {
             Condition::ZSet => self.zero_bit(),
             Condition::ZNotSet => !self.zero_bit(),
             Condition::CSet => self.carry_bit(),
-            Condition::CNotSet => !self.carry_bit()
+            Condition::CNotSet => !self.carry_bit(),
         }
     }
 

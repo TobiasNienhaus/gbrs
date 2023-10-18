@@ -5,7 +5,7 @@ use minifb::{Key, KeyRepeat};
 use std::str::FromStr;
 
 use crate::window::GbWindow;
-use clap::{App, Arg};
+use clap::{crate_version, App, Arg};
 use rand::Rng;
 
 // Links:
@@ -22,6 +22,8 @@ use rand::Rng;
 // https://ladecadence.net/trastero/listado%20juegos%20gameboy.html
 // https://romhustler.org/roms/gbc/number
 // https://github.com/aidan-clyens/GBExperience
+// https://github.com/Baekalfen/PyBoy/blob/master/PyBoy.pdf
+// https://gbdev.io/pandocs
 
 struct CliOpts {
     rom_path: String,
@@ -31,6 +33,7 @@ struct CliOpts {
 impl CliOpts {
     fn load() -> CliOpts {
         let matches = App::new("GB-rs")
+            .version(crate_version!())
             .arg(Arg::with_name("rom-path").required(true).index(1))
             .arg(
                 Arg::with_name("magnification")
@@ -52,7 +55,10 @@ impl CliOpts {
 }
 
 fn main() {
-    println!("Mem region: {:?}", game_boy::memory::MemRegion::get_region(0xC3C8));
+    println!(
+        "Mem region: {:?}",
+        game_boy::memory::MemRegion::get_region(0xC3C8)
+    );
     let opts = CliOpts::load();
     let mut gb = game_boy::GameBoy::load(&opts.rom_path.into()).unwrap();
 
@@ -65,14 +71,18 @@ fn main() {
     // }
 
     while window.is_open() {
-        // if window.win().is_key_pressed(Key::Space, KeyRepeat::No) {
-        //     for i in window.buffer_mut().iter_mut() {
-        //         *i = rand::thread_rng().gen_range(0..=3);
-        //     }
-        // }
+        if window.win().is_key_pressed(Key::Space, KeyRepeat::No) {
+            for i in window.buffer_mut().iter_mut() {
+                *i = rand::thread_rng().gen_range(0..=3);
+            }
+        }
 
         gb.frame(window.buffer_mut());
 
         window.display();
     }
 }
+
+// GENERAL TODO
+// TODO Writing to Divider Register sets it to 0
+// TODO Interrupts

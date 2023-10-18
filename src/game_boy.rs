@@ -1,6 +1,6 @@
-use std::path::PathBuf;
 use crate::game_boy::memory::MemError;
 use crate::game_boy::video::PPU;
+use std::path::PathBuf;
 
 mod cpu;
 pub mod memory;
@@ -8,7 +8,7 @@ mod video;
 
 #[derive(Debug)]
 pub enum GBRSError {
-    MemError(memory::MemError)
+    MemError(memory::MemError),
 }
 
 impl From<memory::MemError> for GBRSError {
@@ -19,7 +19,7 @@ impl From<memory::MemError> for GBRSError {
 
 // #[derive(Debug)]
 pub struct GameBoy {
-    cpu: cpu::Cpu
+    cpu: cpu::Cpu,
 }
 
 impl GameBoy {
@@ -27,9 +27,7 @@ impl GameBoy {
     const PIXEL_TRANSFER_CLOCKS: u32 = 43;
     const H_BLANK_CLOCKS: u32 = 51;
     const CLOCKS_PER_LINE: u32 =
-        GameBoy::OAM_SEARCH_CLOCKS +
-        GameBoy::PIXEL_TRANSFER_CLOCKS +
-        GameBoy::H_BLANK_CLOCKS;
+        GameBoy::OAM_SEARCH_CLOCKS + GameBoy::PIXEL_TRANSFER_CLOCKS + GameBoy::H_BLANK_CLOCKS;
 
     const DRAW_LINES: u32 = 144;
     const V_BLANK_LINES: u32 = 10;
@@ -40,7 +38,7 @@ impl GameBoy {
     pub fn load<'a>(path: &'_ PathBuf) -> Result<GameBoy, GBRSError> {
         let memory = memory::MMU::load_from_path(path)?;
         Ok(GameBoy {
-            cpu: cpu::Cpu::new(memory)
+            cpu: cpu::Cpu::new(memory),
         })
     }
 
@@ -67,6 +65,7 @@ impl GameBoy {
                     } else {
                         clocks_left -= 1;
                     }
+                    self.cpu.timer_clock_cycle();
                 }
                 PPU::write_line(self.cpu.memory_mut(), buffer);
             } else {
@@ -77,6 +76,7 @@ impl GameBoy {
                     } else {
                         clocks_left -= 1;
                     }
+                    self.cpu.timer_clock_cycle();
                 }
             }
         }

@@ -3,9 +3,9 @@ use std::convert::TryInto;
 use std::ops::Range;
 use std::path::PathBuf;
 
+pub mod misc;
 pub mod rom;
 pub mod video;
-pub mod misc;
 
 #[derive(Debug)]
 pub enum MemError {
@@ -59,11 +59,11 @@ impl MemRegion {
         match address {
             0x0..=0x7FFF => MemRegion::Rom,
             0x8000..=0x9FFF => MemRegion::VRam,
-            0xA000..=0xBFFF => MemRegion::Ram,
+            0xA000..=0xBFFF => MemRegion::Ram, // External RAM?
             0xC000..=0xDFFF => MemRegion::WRam,
-            0xE000..=0xFDFF => MemRegion::Echo,
+            0xE000..=0xFDFF => MemRegion::Echo, // Prohibited
             0xFE00..=0xFE9F => MemRegion::Oam,
-            0xFEA0..=0xFEFF => MemRegion::InvalidOam,
+            0xFEA0..=0xFEFF => MemRegion::InvalidOam, // Prohibited
             0xFF00..=0xFF7F => MemRegion::IOMemMap,
             0xFF80..=0xFFFE => MemRegion::HRam,
             u16::MAX => MemRegion::IEReg, // 0xFFFF is not supported by IntelliJ Rust extension
@@ -183,7 +183,11 @@ impl MMU {
             todo!()
         } else {
             let address = (address as usize) - 0x8000; // Subtract ROM region
-            u128::from_le_bytes(self.mem[address as usize..address as usize + 16].try_into().unwrap())
+            u128::from_le_bytes(
+                self.mem[address as usize..address as usize + 16]
+                    .try_into()
+                    .unwrap(),
+            )
         }
         // TODO correctly handle errors, etc. (over boundary write, etc.)
         // Read the next 16 bytes from memory and put them in a u128

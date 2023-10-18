@@ -21,17 +21,11 @@ impl Cpu {
     ///
     /// 2 cycles
     pub(super) fn adc(&mut self, n8: u8) -> u32 {
-        let (temp, overflow) = n8
-            .overflowing_add(self.carry_bit() as u8);
-        let (res, overflow2) = self.a_reg()
-            .overflowing_add(temp);
+        let (temp, overflow) = n8.overflowing_add(self.carry_bit() as u8);
+        let (res, overflow2) = self.a_reg().overflowing_add(temp);
         let overflow = overflow || overflow2;
 
-        let half_overflow = (
-            (self.a_reg() & 0xF) +
-                (n8 & 0xF) +
-                self.carry_bit() as u8
-        ) > 0xF; // Does adding the lower half of the numbers (plus carry) overflow?
+        let half_overflow = ((self.a_reg() & 0xF) + (n8 & 0xF) + self.carry_bit() as u8) > 0xF; // Does adding the lower half of the numbers (plus carry) overflow?
 
         self.set_carry_bit(overflow); // Did the calculation overflow
         self.set_half_carry_bit(half_overflow); // See half_overflow
@@ -62,13 +56,9 @@ impl Cpu {
     ///
     /// 2 cycles
     pub(super) fn add(&mut self, n8: u8) -> u32 {
-        let (res, overflow) = self.a_reg()
-            .overflowing_add(n8);
+        let (res, overflow) = self.a_reg().overflowing_add(n8);
 
-        let half_overflow = (
-            (self.a_reg() & 0xF) +
-                (n8 & 0xF)
-        ) > 0xF; // Does adding the lower half of the numbers overflow the lower nibble?
+        let half_overflow = ((self.a_reg() & 0xF) + (n8 & 0xF)) > 0xF; // Does adding the lower half of the numbers overflow the lower nibble?
 
         self.set_carry_bit(overflow); // Did the calculation overflow
         self.set_half_carry_bit(half_overflow); // See half_overflow
@@ -109,7 +99,7 @@ impl Cpu {
 
         self.set_carry_bit(overflow); // Did the calculation overflow
         self.set_half_carry_bit(half_overflow); // See half_overflow
-        // zero bit is not set
+                                                // zero bit is not set
 
         self.write_reg16(Register16::HL, res);
     }
@@ -126,7 +116,7 @@ impl Cpu {
 
         self.set_zero_bit(false); // By definition
         self.set_negative_bit(false); // By definition
-        // TODO WTF???
+                                      // TODO WTF???
         self.set_carry_bit((self.sp ^ (e8_byte as u16) ^ (res & 0xFFFF)) & 0x100 == 0x100);
         // TODO WTF???
         self.set_half_carry_bit((self.sp ^ (e8_byte as u16) ^ (res & 0xFFFF)) & 0x10 == 0x10);
@@ -190,7 +180,7 @@ impl Cpu {
     /// This technically doesn't exist for arbitrary bytes in the GB Classic
     fn bit(&mut self, to_test: u8, bit: u8) {
         assert!(bit <= 7); // Is an assert necessary?
-        // This somehow doesn't set (or reset) the carry flag
+                           // This somehow doesn't set (or reset) the carry flag
         self.set_zero_bit(to_test & (1 << bit) == 0);
         self.set_negative_bit(false); // By definition
         self.set_half_carry_bit(true); // By definition
@@ -373,6 +363,7 @@ impl Cpu {
     ///
     /// 1 cycle
     pub(super) fn ei(&mut self) -> u32 {
+        println!("!!!!!!!!!!!!!!!!!!!!!!!!!!Enable interrupts");
         // TODO shouldn't this set a bit at some address in memory?
         self.interrupts_enabled = true;
         1
@@ -733,7 +724,9 @@ impl Cpu {
     /// For completeness
     ///
     /// 1 cycle
-    pub(super) fn nop(&self) -> u32 { 1 }
+    pub(super) fn nop(&self) -> u32 {
+        1
+    }
 
     /// Calculate the bitwise or between register A and the specified register and
     /// store the result in register A.
@@ -895,9 +888,7 @@ impl Cpu {
     ///
     /// 4 cycles
     pub(super) fn rl_hl(&mut self) -> u32 {
-        let val = self.mmu.read_8(
-            self.reg16(Register16::HL)
-        );
+        let val = self.mmu.read_8(self.reg16(Register16::HL));
         let val = self.rl_helper(val);
         let reg_val = self.reg16(Register16::HL);
         self.mmu.write_8(reg_val, val);
@@ -951,9 +942,7 @@ impl Cpu {
     ///
     /// 4 cycles
     pub(super) fn rlc_hl(&mut self) -> u32 {
-        let val = self.mmu.read_8(
-            self.reg16(Register16::HL)
-        );
+        let val = self.mmu.read_8(self.reg16(Register16::HL));
         let val = self.rlc_helper(val);
         let reg_val = self.reg16(Register16::HL);
         self.mmu.write_8(reg_val, val);
@@ -970,7 +959,7 @@ impl Cpu {
     }
 
     /// Rotate the specified byte to the left
-    fn rlc_helper(&mut self, mut n8: u8) -> u8{
+    fn rlc_helper(&mut self, mut n8: u8) -> u8 {
         // Behavior (apparently)
         // Index
         // C
@@ -1006,9 +995,7 @@ impl Cpu {
     ///
     /// 4 cycles
     pub(super) fn rr_hl(&mut self) -> u32 {
-        let val = self.mmu.read_8(
-            self.reg16(Register16::HL)
-        );
+        let val = self.mmu.read_8(self.reg16(Register16::HL));
         let val = self.rr_helper(val);
         let reg_val = self.reg16(Register16::HL);
         self.mmu.write_8(reg_val, val);
@@ -1062,9 +1049,7 @@ impl Cpu {
     ///
     /// 4 cycles
     pub(super) fn rrc_hl(&mut self) -> u32 {
-        let val = self.mmu.read_8(
-            self.reg16(Register16::HL)
-        );
+        let val = self.mmu.read_8(self.reg16(Register16::HL));
         let val = self.rrc_helper(val);
         let reg_val = self.reg16(Register16::HL);
         self.mmu.write_8(reg_val, val);
@@ -1149,7 +1134,7 @@ impl Cpu {
         self.set_carry_bit(result < 0);
         let result = result as u8; // Same behavior as static_cast in C++
         self.set_half_carry_bit(
-            ((self.a_reg() & 0xF) as i16 - (n8 & 0xF) as i16 - carry as i16) < 0
+            ((self.a_reg() & 0xF) as i16 - (n8 & 0xF) as i16 - carry as i16) < 0,
         );
         self.set_negative_bit(true); // By definition
         self.set_zero_bit(result == 0);
@@ -1198,9 +1183,7 @@ impl Cpu {
     ///
     /// 4 cycles
     pub(super) fn sla_hl(&mut self) -> u32 {
-        let val = self.mmu.read_8(
-            self.reg16(Register16::HL)
-        );
+        let val = self.mmu.read_8(self.reg16(Register16::HL));
         let val = self.sla_helper(val);
         let reg_val = self.reg16(Register16::HL);
         self.mmu.write_8(reg_val, val);
@@ -1246,9 +1229,7 @@ impl Cpu {
     ///
     /// 4 cycles
     pub(super) fn sra_hl(&mut self) -> u32 {
-        let val = self.mmu.read_8(
-            self.reg16(Register16::HL)
-        );
+        let val = self.mmu.read_8(self.reg16(Register16::HL));
         let val = self.sra_helper(val);
         let reg_val = self.reg16(Register16::HL);
         self.mmu.write_8(reg_val, val);
@@ -1293,9 +1274,7 @@ impl Cpu {
     ///
     /// 4 cycles
     pub(super) fn srl_hl(&mut self) -> u32 {
-        let val = self.mmu.read_8(
-            self.reg16(Register16::HL)
-        );
+        let val = self.mmu.read_8(self.reg16(Register16::HL));
         let val = self.srl_helper(val);
         let reg_val = self.reg16(Register16::HL);
         self.mmu.write_8(reg_val, val);
@@ -1357,8 +1336,8 @@ impl Cpu {
         let a = self.a_reg();
         self.set_zero_bit(a == n8); // Result is only zero, if A == n8
         self.set_negative_bit(true); // By definition
-        // Result of lower nibble would have to borrow
-        // Very straight forward (and maybe not too fast) solution
+                                     // Result of lower nibble would have to borrow
+                                     // Very straight forward (and maybe not too fast) solution
         self.set_half_carry_bit(((a & 0xF) as i16 - (n8 & 0xF) as i16) < 0);
         self.set_carry_bit(n8 > a); // Result would have to borrow
         *self.reg_mut(Register8::A) = a.overflowing_sub(n8).0;
@@ -1377,9 +1356,7 @@ impl Cpu {
     ///
     /// 4 cycles
     pub(super) fn swap_hl(&mut self) -> u32 {
-        let val = self.mmu.read_8(
-            self.reg16(Register16::HL)
-        );
+        let val = self.mmu.read_8(self.reg16(Register16::HL));
         let val = self.swap_helper(val);
         let reg_val = self.reg16(Register16::HL);
         self.mmu.write_8(reg_val, val);
