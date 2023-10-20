@@ -3,9 +3,12 @@ use std::convert::TryInto;
 use std::ops::Range;
 use std::path::PathBuf;
 
+pub mod adresses;
 pub mod misc;
 pub mod rom;
 pub mod video;
+
+use adresses as adr;
 
 #[derive(Debug)]
 pub enum MemError {
@@ -132,6 +135,10 @@ impl MMU {
     pub fn write_8(&mut self, address: u16, val: u8) -> MemResult<()> {
         if address == 0xDFE0 {
             println!("--------------\nWriting {:#04X} to oxDFE0", val);
+        } else if address == adr::INTERRUPT_FLAGS && val & 0b1 == 0b1 {
+            println!("-----------------------------------");
+            println!("                           000JSTLV");
+            println!("Setting interrupt flags to {:#08b}", val)
         }
         // TODO there are some special addresses with specific behavior
         // 0xFF46 -> Transfer ROM or RAM to OAM

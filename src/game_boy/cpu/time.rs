@@ -1,4 +1,4 @@
-use super::{interrupts::Interrupt, Cpu};
+use super::{super::memory::adresses as adr, interrupts::Interrupt, Cpu};
 
 const CPU_CLOCK_SPEED: u32 = 1048576;
 const MODE_00_TICKS: u32 = CPU_CLOCK_SPEED / 4096;
@@ -6,15 +6,11 @@ const MODE_01_TICKS: u32 = CPU_CLOCK_SPEED / 262144;
 const MODE_10_TICKS: u32 = CPU_CLOCK_SPEED / 65536;
 const MODE_11_TICKS: u32 = CPU_CLOCK_SPEED / 16384;
 
-const DIVIDER_REGISTER: u16 = 0xFF04;
-const TIMER_COUNTER: u16 = 0xFF05;
-const TIMER_MODULO: u16 = 0xFF06;
-const TIMER_CONTROL: u16 = 0xFF07;
 const DIVIDER_CLOCKS: u32 = CPU_CLOCK_SPEED / 16384;
 
 impl Cpu {
     fn timer_tick_count(&self) -> u32 {
-        let tac = self.mmu.read_8(TIMER_CONTROL);
+        let tac = self.mmu.read_8(adr::TIMER_CONTROL);
         match tac & 0b11 {
             0b00 => MODE_00_TICKS,
             0b01 => MODE_01_TICKS,
@@ -25,25 +21,25 @@ impl Cpu {
     }
 
     fn timer_enabled(&self) -> bool {
-        self.mmu.read_8(TIMER_CONTROL) & 0b100 == 0b100
+        self.mmu.read_8(adr::TIMER_CONTROL) & 0b100 == 0b100
     }
 
     fn timer_increase(&mut self) -> bool {
         // Read timer counter, increment it and reset it to timer modulo on overflow
-        let tima = self.mmu.read_8(TIMER_COUNTER);
+        let tima = self.mmu.read_8(adr::TIMER_COUNTER);
         let (mut result, overflow) = tima.overflowing_add(1);
         if overflow {
-            result = self.mmu.read_8(TIMER_MODULO);
+            result = self.mmu.read_8(adr::TIMER_MODULO);
         }
-        self.mmu.write_8(TIMER_COUNTER, result);
+        self.mmu.write_8(adr::TIMER_COUNTER, result);
         return overflow;
     }
 
     fn divider_increase(&mut self) -> bool {
         // Read divider counter, increment it and reset it to timer modulo on overflow
-        let tima = self.mmu.read_8(DIVIDER_REGISTER);
+        let tima = self.mmu.read_8(adr::DIVIDER_REGISTER);
         let (result, overflow) = tima.overflowing_add(1);
-        self.mmu.write_8(DIVIDER_REGISTER, result);
+        self.mmu.write_8(adr::DIVIDER_REGISTER, result);
         return overflow;
     }
 

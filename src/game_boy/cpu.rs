@@ -104,7 +104,7 @@ pub enum ResetVec {
 }
 
 fn check_bit(val: u8, bit: u8) -> bool {
-    ((val >> bit) & 0x1) == 0x1
+    ((val >> bit) & 0b1) == 0b1
 }
 
 impl Cpu {
