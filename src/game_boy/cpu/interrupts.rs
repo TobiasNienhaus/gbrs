@@ -1,4 +1,4 @@
-use super::{super::memory::adresses as adr, check_bit, Cpu};
+use super::{super::memory::addresses as adr, check_bit, Cpu};
 
 #[derive(Copy, Clone, Debug)]
 pub enum Interrupt {
@@ -36,31 +36,31 @@ impl Interrupt {
 
 impl Cpu {
     pub fn set_interrupt(&mut self, interrupt: Interrupt) {
-        let if_val = self.mmu.read_8(adr::INTERRUPT_FLAGS) | (1 << interrupt.if_ie_bit());
-        self.mmu.write_8(adr::INTERRUPT_FLAGS, if_val);
+        let if_val = self.mmu.read_8(adr::interrupts::FLAGS) | (1 << interrupt.if_ie_bit());
+        self.mmu.write_8(adr::interrupts::FLAGS, if_val);
     }
 
     fn unset_interrupt(&mut self, interrupt: Interrupt) {
-        let if_val = self.mmu.read_8(adr::INTERRUPT_FLAGS) & !(1 << interrupt.if_ie_bit());
-        self.mmu.write_8(adr::INTERRUPT_FLAGS, if_val);
+        let if_val = self.mmu.read_8(adr::interrupts::FLAGS) & !(1 << interrupt.if_ie_bit());
+        self.mmu.write_8(adr::interrupts::FLAGS, if_val);
     }
 
     fn interrupt_enabled(&self, interrupt: Interrupt) -> bool {
         check_bit(
-            self.mmu.read_8(adr::INTERRUPT_ENABLE),
+            self.mmu.read_8(adr::interrupts::ENABLE),
             interrupt.if_ie_bit(),
         )
     }
 
     fn interrupt_requested(&self, interrupt: Interrupt) -> bool {
         self.interrupt_enabled(interrupt)
-            && check_bit(self.mmu.read_8(adr::INTERRUPT_FLAGS), interrupt.if_ie_bit())
+            && check_bit(self.mmu.read_8(adr::interrupts::FLAGS), interrupt.if_ie_bit())
     }
 
     fn execute_interrupt(&mut self, interrupt: Interrupt) -> bool {
         // TODO keine Ahnung, ob das so passt
         if self.interrupt_requested(interrupt) {
-            println!("Interrupted: {:?}", interrupt);
+            // println!("Interrupted: {:?}", interrupt);
             self.interrupts_enabled = false;
             self.unset_interrupt(interrupt);
             self.call(interrupt.jump_address());

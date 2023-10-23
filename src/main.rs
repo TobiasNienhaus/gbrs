@@ -9,6 +9,7 @@ use std::str::FromStr;
 use crate::window::GbWindow;
 use clap::{crate_version, App, Arg};
 use rand::Rng;
+use crate::game_boy::cpu::debug::ins_name;
 
 // Links:
 // Endianness Guide:
@@ -26,6 +27,16 @@ use rand::Rng;
 // https://github.com/aidan-clyens/GBExperience
 // https://github.com/Baekalfen/PyBoy/blob/master/PyBoy.pdf
 // https://gbdev.io/pandocs
+// https://gbdev.io
+// https://gbdev.io/gb-opcodes/optables/ <- Opcodes
+// https://github.com/Rodrigodd/gameroy#resources-to-be-thankful-for
+// https://gekkio.fi/files/gb-docs/gbctr.pdf
+
+// TODO
+// in 0xFFB8 werden falsche Daten geladen
+// bei Schritt 15989 ist PC falsch. IST: 0233 SOLL: 0239
+// Der Conditional Jump aus Schritt 15988 sollte eigentlicht NICHT springen
+// -> Eine Flag ist falsch
 
 struct CliOpts {
     rom_path: String,
@@ -72,17 +83,54 @@ fn main() {
     //     *i = rand::thread_rng().gen_range(0..=3);
     // }
 
+    let mut run = true;
+
+    let mut cou = 0;
+
     while window.is_open() {
-        if window.win().is_key_pressed(Key::Space, KeyRepeat::No) {
-            for i in window.buffer_mut().iter_mut() {
-                *i = rand::thread_rng().gen_range(0..=3);
-            }
+        let mut has_clocks_left_in_frame = true;
+
+        while !gb.clock(window.buffer_mut()) {
+            // let info = gb.clock(window.buffer_mut());
+            // has_clocks_left_in_frame = !info.frame_done();
+            // if info.instruction().is_new() {
+                // println!(
+                //     "[{:#06X}] [{:02X}] {{{}}} -> {}",
+                //     info.instruction().pc(),
+                //     info.instruction().instruction(),
+                //     format!(
+                //         "{} {} {} {}",
+                //         if let Some(byte) = info.instruction().data()[0] { format!("{:02X}", byte) } else { "NN".to_owned() },
+                //         if let Some(byte) = info.instruction().data()[1] { format!("{:02X}", byte) } else { "NN".to_owned() },
+                //         if let Some(byte) = info.instruction().data()[2] { format!("{:02X}", byte) } else { "NN".to_owned() },
+                //         if let Some(byte) = info.instruction().data()[3] { format!("{:02X}", byte) } else { "NN".to_owned() },
+                //     ),
+                //     ins_name(info.instruction().instruction())
+                // );
+                // println!(
+                //     "{:04X} {:02X} {}",
+                //     info.instruction().stack_info().pc(),
+                //     info.instruction().instruction(),
+                //     info.instruction().stack_info()
+                // );
+                // block_for_line();
+            // }
+            // run = has_clocks_left_in_frame;
         }
+        // eprintln!("Frame! {}", cou);
 
-        gb.frame(window.buffer_mut());
+        cou += 1;
 
+        for i in window.buffer_mut().iter_mut() {
+            *i = rand::thread_rng().gen_range(0..=3);
+        }
         window.display();
     }
+}
+
+fn block_for_line() {
+    let mut line = String::new();
+    let _ = std::io::stdin().read_line(&mut line).expect("Failed to read line");
 }
 
 // GENERAL TODO

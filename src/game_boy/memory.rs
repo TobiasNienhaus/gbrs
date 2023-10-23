@@ -3,18 +3,22 @@ use std::convert::TryInto;
 use std::ops::Range;
 use std::path::PathBuf;
 
-pub mod adresses;
+pub mod addresses;
 pub mod misc;
 pub mod rom;
 pub mod video;
 
-use adresses as adr;
+use addresses as adr;
+
+const BOOT_ROM: &[u8] = include_bytes!("../../res/boot/dmg_boot.bin");
 
 #[derive(Debug)]
 pub enum MemError {
     RomError(rom::RomError),
     InvalidAddressRegion(MemRegion),
     Invalid2ByteAccess,
+    OutOfBounds,
+    BootRomOutOfBounds
 }
 
 pub type MemResult<T> = Result<T, MemError>;
@@ -98,6 +102,10 @@ impl MemRegion {
     pub fn get_offset_in_region(address: u16) -> u16 {
         address - Self::get_region_start(Self::get_region(address))
     }
+
+    pub fn is_in_boot_rom(address: u16) -> bool {
+        address < 0x100 - 2
+    }
 }
 
 #[derive(Debug)]
@@ -123,22 +131,34 @@ impl MMU {
         &self.rom
     }
 
+    // TODO let read_8 return MemResult
+
     pub fn read_8(&self, address: u16) -> u8 {
-        if MMU::ROM_REGION.contains(&address) {
+        if self.boot_rom_enabled() && MemRegion::is_in_boot_rom(address) {
+            self.read_8_boot(address)
+        } else if MMU::ROM_REGION.contains(&address) {
             self.rom.read_8(address)
         } else {
             self.mem[address as usize - 0x8000]
         }
     }
 
+    fn read_8_boot(&self, address: u16) -> u8 {
+        if MemRegion::is_in_boot_rom(address) {
+            BOOT_ROM[address as usize]
+        } else {
+            0xFF
+        }
+    }
+
     // TODO maybe just return bool?
     pub fn write_8(&mut self, address: u16, val: u8) -> MemResult<()> {
         if address == 0xDFE0 {
-            println!("--------------\nWriting {:#04X} to oxDFE0", val);
-        } else if address == adr::INTERRUPT_FLAGS && val & 0b1 == 0b1 {
-            println!("-----------------------------------");
-            println!("                           000JSTLV");
-            println!("Setting interrupt flags to {:#08b}", val)
+            // println!("--------------\nWriting {:#04X} to oxDFE0", val);
+        } else if address == adr::interrupts::FLAGS && val & 0b1 == 0b1 {
+            // println!("-----------------------------------");
+            // println!("                           000JSTLV");
+            // println!("Setting interrupt flags to {:#08b}", val)
         }
         // TODO there are some special addresses with specific behavior
         // 0xFF46 -> Transfer ROM or RAM to OAM
@@ -158,15 +178,30 @@ impl MMU {
     pub fn read_16(&self, address: u16) -> MemResult<u16> {
         // Do 2-byte reads have to be aligned to a 2-byte grid?
         // If yes a simple modulo is enough
+        // TODO handle 2 Byte read on 0xFF when Boot ROM enabled
         if MemRegion::is_region_end(address) {
             Err(MemError::Invalid2ByteAccess)
         } else {
-            if MMU::ROM_REGION.contains(&address) {
+            if MemRegion::is_in_boot_rom(address) && self.boot_rom_enabled() {
+                let a = address.into();
+                Ok(u16::from_le_bytes(BOOT_ROM[a..a + 2].try_into().unwrap()))
+            } else if MMU::ROM_REGION.contains(&address) {
                 Ok(self.rom.read_16(address))
+            } else if address as usize - 0x8000 >= NON_ROM_SIZE - 1 {
+                Err(MemError::OutOfBounds)
             } else {
                 let a = address as usize - 0x8000;
                 Ok(u16::from_le_bytes(self.mem[a..a + 2].try_into().unwrap()))
             }
+        }
+    }
+
+    fn read_16_boot(&self, address: u16) -> MemResult<u16> {
+        if address >= 0x100 - 2 {
+            Err(MemError::BootRomOutOfBounds)
+        } else {
+            let a: usize = address.into();
+            Ok(u16::from_le_bytes(BOOT_ROM[a..a + 2].try_into().unwrap()))
         }
     }
 
@@ -198,5 +233,10 @@ impl MMU {
         }
         // TODO correctly handle errors, etc. (over boundary write, etc.)
         // Read the next 16 bytes from memory and put them in a u128
+        // TODO allow Boot ROM Reads
+    }
+
+    fn boot_rom_enabled(&self) -> bool {
+        self.mem[adr::memory::BOOT_ROM_ENABLED as usize - 0x8000] == 0x00
     }
 }

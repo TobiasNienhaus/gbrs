@@ -7,7 +7,7 @@ impl Cpu {
     pub fn tick(&mut self) -> u32 {
         // TODO First interrupt then halt?
         if self.handle_interrupts() {
-            println!("Handled Interrupt");
+            // println!("Handled Interrupt");
             return 5;
         }
         if !self.is_running() {
@@ -359,6 +359,7 @@ impl Cpu {
                 let param = self.read_u16();
                 self.jp_cc(Condition::ZSet, param)
             }
+            // Cycle should be added due to additional read_u8 in execute_cb()
             0xCB => self.execute_cb(), // TODO Should there be one cycle added?
             0xCC => {
                 let param = self.read_u16();

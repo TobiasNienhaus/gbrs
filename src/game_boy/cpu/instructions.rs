@@ -363,7 +363,7 @@ impl Cpu {
     ///
     /// 1 cycle
     pub(super) fn ei(&mut self) -> u32 {
-        println!("!!!!!!!!!!!!!!!!!!!!!!!!!!Enable interrupts");
+        // println!("!!!!!!!!!!!!!!!!!!!!!!!!!!Enable interrupts");
         // TODO shouldn't this set a bit at some address in memory?
         self.interrupts_enabled = true;
         1

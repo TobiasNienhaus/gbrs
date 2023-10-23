@@ -1,5 +1,35 @@
 use std::fmt::{Display, Formatter};
-use crate::game_boy::cpu::Cpu;
+use crate::game_boy::cpu::{Cpu, Register16, Register8};
+
+
+#[derive(Copy, Clone)]
+pub struct DebugStackInfo {
+    bc: u16,
+    de: u16,
+    hl: u16,
+    af: u16,
+    sp: u16,
+    pc: u16
+}
+
+impl DebugStackInfo {
+    pub fn pc(&self) -> u16 { self.pc }
+}
+
+impl Display for DebugStackInfo {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "BC={:04X} DE={:04X} HL={:04X} AF={:04X} SP={:04X} PC={:04X}",
+            self.bc,
+            self.de,
+            self.hl,
+            self.af,
+            self.sp,
+            self.pc
+        )
+    }
+}
 
 impl Cpu {
     pub fn get_pc(&self) -> u16 {
@@ -8,6 +38,27 @@ impl Cpu {
 
     pub fn peek_instruction(&self) -> u8 {
         self.peek_u8()
+    }
+
+    pub fn peek_data(&self) -> [Option<u8>; 4] {
+        let mut res: [Option<u8>; 4] = [None; 4];
+        for i in 1..=4 {
+            if u16::MAX - i > self.pc {
+                res[(i - 1) as usize] = Some(self.mmu.read_8(self.pc + i))
+            }
+        }
+        res
+    }
+
+    pub fn debug_stack_info(&self) -> DebugStackInfo {
+        DebugStackInfo {
+            bc: self.reg16(Register16::BC),
+            de: self.reg16(Register16::DE),
+            hl: self.reg16(Register16::HL),
+            af: u16::from_le_bytes([self.reg(Register8::F), self.reg(Register8::A)]),
+            pc: self.pc,
+            sp: self.sp
+        }
     }
 }
 

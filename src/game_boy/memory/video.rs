@@ -1,6 +1,8 @@
 use super::*;
 use super::super::video::VideoMode;
 
+use addresses as adr;
+
 impl VideoMode {
     fn to_two_bit(&self) -> u8 {
         match self {
@@ -47,7 +49,7 @@ impl BgTileMapMode {
 
     pub fn pivot(&self) -> u16 {
         match self {
-            BgTileMapMode::Signed => 0x8800,
+            BgTileMapMode::Signed => 0x9000, // 0x8800, // TODO it should center around 0x9000, right?
             BgTileMapMode::Unsigned => 0x8000,
         }
     }
@@ -70,6 +72,52 @@ pub enum SelectedTileMap {
     Low
 }
 
+pub enum LcdStatusBit {
+    LycStatInterrupt,
+    OamStatInterrupt,
+    VBlankStatInterrupt,
+    HBlankStatInterrupt,
+    LycLyCmp
+}
+
+impl LcdStatusBit {
+    fn bit(&self) -> u8 {
+        match self {
+            Self::LycStatInterrupt => 6,
+            Self::OamStatInterrupt => 5,
+            Self::VBlankStatInterrupt => 4,
+            Self::HBlankStatInterrupt => 3,
+            Self::LycLyCmp => 2,
+        }
+    }
+}
+
+pub enum LcdControlBit {
+    LcdPpuEnable,
+    WindowTileMapArea,
+    WindowEnable,
+    BgWindowTileDataArea,
+    BgTileMapArea,
+    ObjSize,
+    ObjEnable,
+    BgWindowEnable
+}
+
+impl LcdControlBit {
+    fn bit(&self) -> u8 {
+        match self {
+            LcdControlBit::LcdPpuEnable => 7,
+            LcdControlBit::WindowTileMapArea => 6,
+            LcdControlBit::WindowEnable => 5,
+            LcdControlBit::BgWindowTileDataArea => 4,
+            LcdControlBit::BgTileMapArea => 3,
+            LcdControlBit::ObjSize => 2,
+            LcdControlBit::ObjEnable => 1,
+            LcdControlBit::BgWindowEnable => 0,
+        }
+    }
+}
+
 impl SelectedTileMap {
     pub fn start_address(&self) -> u16 {
         match self {
@@ -82,14 +130,14 @@ impl SelectedTileMap {
 impl LcdcSettings {
     fn from_byte(byte: u8) -> LcdcSettings {
         LcdcSettings {
-            display_enabled: check_bit(byte, 7),
-            window_tile_map_display_select: if check_bit(byte, 6) {
+            display_enabled: check_bit(byte, LcdControlBit::LcdPpuEnable.bit()),
+            window_tile_map_display_select: if check_bit(byte, LcdControlBit::WindowTileMapArea.bit()) {
                 SelectedTileMap::High
             } else {
                 SelectedTileMap::Low
             },
-            window_enabled: check_bit(byte, 5),
-            bg_and_window_tile_data_select: if check_bit(byte, 4) {
+            window_enabled: check_bit(byte, LcdControlBit::WindowEnable.bit()),
+            bg_and_window_tile_data_select: if check_bit(byte, LcdControlBit::BgWindowTileDataArea.bit()) {
                 BgTileMapMode::Unsigned
             } else {
                 BgTileMapMode::Signed
@@ -177,9 +225,10 @@ impl MMU {
     }
 }
 
-impl MMU {
-    const STAT: u16 = 0xFF41;
+// LCD Control
 
+// LCD Status
+impl MMU {
     pub fn enable_lyc_interrupt(&mut self, high: bool) {
         self.set_stat_bit(6, high);
     }
@@ -212,104 +261,99 @@ impl MMU {
         self.get_stat_bit(3)
     }
 
-    pub fn set_coincidence_flag(&mut self, high: bool) {
-        self.set_stat_bit(2, high);
+    // pub fn set_coincidence_flag(&mut self, high: bool) {
+    //     self.set_stat_bit(2, high);
+    // }
+    //
+    // pub fn get_coincidence_flag(&self) -> bool {
+    //     self.get_stat_bit(2)
+    // }
+
+    pub fn update_lyc_ly_cmp(&mut self) {
+        self.set_lcd_status(LcdStatusBit::LycLyCmp, self.read_lyc() == self.read_ly());
     }
 
-    pub fn get_coincidence_flag(&self) -> bool {
-        self.get_stat_bit(2)
+    pub fn set_lcd_status(&mut self, bit: LcdStatusBit, high: bool) {
+        self.set_stat_bit(bit.bit(), high);
+    }
+
+    pub fn get_lcd_status(&self, bit: LcdStatusBit) -> bool {
+        self.get_stat_bit(bit.bit())
     }
 
     pub fn set_video_mode(&mut self, mode: VideoMode) {
-        let mut val = self.read_8(MMU::STAT);
+        let mut val = self.read_8(adr::video::LCD_STATUS);
         val = (val & 0xFC) | mode.to_two_bit();
-        self.write_8(MMU::STAT, val);
+        self.write_8(adr::video::LCD_STATUS, val);
     }
 
     pub fn get_video_mode(&self) -> VideoMode {
-        VideoMode::from_two_bit(self.read_8(MMU::STAT) & 0b11)
+        VideoMode::from_two_bit(self.read_8(adr::video::LCD_STATUS) & 0b11)
     }
 
     fn set_stat_bit(&mut self, bit: u8, high: bool) {
-        let mut val = self.read_8(MMU::STAT);
+        let mut val = self.read_8(adr::video::LCD_STATUS);
         if high {
             val |= 1 << bit;
         } else {
             val &= !(1 << bit);
         }
-        self.write_8(MMU::STAT, val);
+        self.write_8(adr::video::LCD_STATUS, val);
     }
 
     fn get_stat_bit(&self, bit: u8) -> bool {
-        let val = self.read_8(MMU::STAT);
+        let val = self.read_8(adr::video::LCD_STATUS);
         (val >> bit) & 0x1 == 0x1
     }
 }
 
 impl MMU {
-    // Top left position of background map
-    const SCY: u16 = 0xFF42;
-    const SCX: u16 = 0xFF43;
-
     pub fn set_scy(&mut self, val: u8) {
-        self.write_8(MMU::SCY, val);
+        self.write_8(adr::video::SCREEN_Y, val);
     }
 
     pub fn read_scy(&self) -> u8 {
-        self.read_8(MMU::SCY)
+        self.read_8(adr::video::SCREEN_Y)
     }
 
     pub fn set_scx(&mut self, val: u8) {
-        self.write_8(MMU::SCX, val);
+        self.write_8(adr::video::SCREEN_X, val);
     }
 
     pub fn read_scx(&self) -> u8 {
-        self.read_8(MMU::SCX)
+        self.read_8(adr::video::SCREEN_X)
     }
 
-    /// The index of the current line being drawn (read-only)
-    const LY: u16 = 0xFF44;
-
     pub fn set_ly(&mut self, val: u8) {
-        // println!("Setting LY to {:#04X}", val);
-        self.write_8(MMU::LY, val);
+        self.write_8(adr::video::CURRENT_LINE, val);
     }
 
     pub fn read_ly(&self) -> u8 {
-        self.read_8(MMU::LY)
+        self.read_8(adr::video::CURRENT_LINE)
     }
 
-    /// Compared to `LY`. If they are similar, the `STAT` register is set and (if enabled)
-    /// an interrupt is sent
-    const LYC: u16 = 0xFF45;
-
     pub fn set_lyc(&mut self, val: u8) {
-        self.write_8(MMU::LYC, val);
+        self.write_8(adr::video::LINE_COMPARE, val);
     }
 
     pub fn read_lyc(&self) -> u8 {
-        self.read_8(MMU::LYC)
+        self.read_8(adr::video::LINE_COMPARE)
     }
 
-    /// The Y position of the window area.
-    const WY: u16 = 0xFF4A;
-    /// The X position of the window area. (For some reason minus 7)
-    const WX: u16 = 0xFF4B;
-
     pub fn set_wy(&mut self, val: u8) {
-        self.write_8(MMU::WY, val);
+        self.write_8(adr::video::WINDOW_Y, val);
     }
 
     pub fn read_wy(&self) -> u8 {
-        self.read_8(MMU::WY)
+        self.read_8(adr::video::WINDOW_Y)
     }
 
     pub fn set_wx(&mut self, val: u8) {
-        self.write_8(MMU::WX, val);
+        self.write_8(adr::video::WINDOW_X, val);
     }
 
     pub fn read_wx(&self) -> u8 {
-        self.read_8(MMU::WX)
+        self.read_8(adr::video::WINDOW_X)
     }
 }
 
@@ -439,7 +483,7 @@ impl BgTileMap {
         match self.mode {
             BgTileMapMode::Signed => {
                 // TODO figure out, if this wraps correctly => -1 -> u16::MAX - 1
-                (((self.mode.pivot() as i32) + (self.map[y][x].unwrap_signed() as i32)) as u16)
+                ((self.mode.pivot() as i32) + (self.map[y][x].unwrap_signed() as i32)) as u16
             }
             BgTileMapMode::Unsigned => {
                 self.mode.pivot().overflowing_add(self.map[y][x].unwrap_unsigned() as u16).0

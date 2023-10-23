@@ -1,12 +1,13 @@
 pub mod callmap;
 mod instructions;
 pub use callmap::*;
-mod interrupts;
+pub mod interrupts;
 pub mod time;
+pub mod debug;
 
 use super::memory::MMU;
 
-pub(super) struct Cpu {
+pub struct Cpu {
     registers: [u8; 8],
     // a_reg: u8, // Accumulator
     // flag_reg: u8,
@@ -30,7 +31,7 @@ impl Cpu {
     pub fn new(mmu: MMU) -> Cpu {
         Cpu {
             registers: [0u8; 8],
-            pc: 0x0100,
+            pc: 0x0, // 0x0100,
             sp: 0xFFFE,
             mmu,
             interrupts_enabled: false,
@@ -60,6 +61,21 @@ enum Register8 {
     E,
     H,
     L,
+}
+
+impl Register8 {
+    pub fn idx(&self) -> usize {
+        match self {
+            Register8::A => 0,
+            Register8::F => 1,
+            Register8::B => 2,
+            Register8::C => 3,
+            Register8::D => 4,
+            Register8::E => 5,
+            Register8::H => 6,
+            Register8::L => 7,
+        }
+    }
 }
 
 #[derive(Copy, Clone)]
@@ -108,39 +124,12 @@ fn check_bit(val: u8, bit: u8) -> bool {
 }
 
 impl Cpu {
-    const A_REG: usize = 0;
-    const F_REG: usize = 1;
-    const B_REG: usize = 2;
-    const C_REG: usize = 3;
-    const D_REG: usize = 4;
-    const E_REG: usize = 5;
-    const H_REG: usize = 6;
-    const L_REG: usize = 7;
-
     fn reg(&self, register: Register8) -> u8 {
-        match register {
-            Register8::A => self.registers[Self::A_REG],
-            Register8::F => self.registers[Self::F_REG],
-            Register8::B => self.registers[Self::B_REG],
-            Register8::C => self.registers[Self::C_REG],
-            Register8::D => self.registers[Self::D_REG],
-            Register8::E => self.registers[Self::E_REG],
-            Register8::H => self.registers[Self::H_REG],
-            Register8::L => self.registers[Self::L_REG],
-        }
+        self.registers[register.idx()]
     }
 
     fn reg_mut(&mut self, register: Register8) -> &mut u8 {
-        match register {
-            Register8::A => &mut self.registers[Self::A_REG],
-            Register8::F => &mut self.registers[Self::F_REG],
-            Register8::B => &mut self.registers[Self::B_REG],
-            Register8::C => &mut self.registers[Self::C_REG],
-            Register8::D => &mut self.registers[Self::D_REG],
-            Register8::E => &mut self.registers[Self::E_REG],
-            Register8::H => &mut self.registers[Self::H_REG],
-            Register8::L => &mut self.registers[Self::L_REG],
-        }
+        &mut self.registers[register.idx()]
     }
 
     fn a_reg(&self) -> u8 {
@@ -314,6 +303,7 @@ impl Cpu {
     }
 
     fn read_i8(&mut self) -> i8 {
+        // TODO is the i8 read correctly?
         i8::from_le_bytes([self.read_u8()])
     }
 }

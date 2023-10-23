@@ -48,7 +48,7 @@ impl PPU {
             let color = sprite.get(tile_pixel.0 as usize, tile_pixel.1 as usize);
             let color = palette.remap(color);
             let pixel_index = y as usize * SCREEN_WIDTH as usize + x as usize;
-            let pixel_index = pixel_index as usize;
+            let pixel_index = pixel_index;
             buffer[pixel_index] = color;
         }
     }
