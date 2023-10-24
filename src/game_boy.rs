@@ -129,7 +129,7 @@ impl GameBoy {
     // - 10 lines V-Blank
 
     /// Do one single clock cycle in the GB-CPU
-    pub fn clock(&mut self, buffer: &mut Box<[u8]>) -> bool {
+    pub fn clock(&mut self, buffer: &mut Box<[u8]>) -> ClockInformation {
         let ins = self.cpu.peek_instruction();
         let data = self.cpu.peek_data();
         let stack_info = self.cpu().debug_stack_info();
@@ -179,8 +179,8 @@ impl GameBoy {
         self.clock_number_in_current_frame += 1;
         let new_frame = self.clock_number_in_current_frame == Self::CLOCKS;
         if new_frame { self.clock_number_in_current_frame = 0; }
-        // ClockInformation::new(ins, data, stack_info, new_instruction, self.cycles_left_in_instruction, new_frame)
-        new_frame
+        ClockInformation::new(ins, data, stack_info, new_instruction, self.cycles_left_in_instruction, new_frame)
+        // new_frame
     }
 
     /// Try to do the next cpu instruction.

@@ -345,7 +345,7 @@ impl Cpu {
     ///
     /// 2 cycles
     pub(super) fn dec_sp(&mut self) -> u32 {
-        self.sp -= 1;
+        self.sp = self.sp.overflowing_sub(1).0;
         2
     }
 
@@ -644,8 +644,9 @@ impl Cpu {
     ///
     /// 2 cycles
     pub(super) fn ld_a_to_hl_and_dec(&mut self) -> u32 {
-        self.dec_hl();
+        let before = self.reg16(Register16::HL);
         self.ld_r8_to_hl(Register8::A);
+        self.write_reg16(Register16::HL, before.overflowing_sub(1).0);
         2
     }
 
@@ -662,8 +663,9 @@ impl Cpu {
     ///
     /// 2 cycles
     pub(super) fn ld_hl_to_a_and_dec(&mut self) -> u32 {
-        self.dec_hl();
+        let before = self.reg16(Register16::HL);
         self.ld_hl_to_r8(Register8::A);
+        self.write_reg16(Register16::HL, before.overflowing_sub(1).0);
         2
     }
 

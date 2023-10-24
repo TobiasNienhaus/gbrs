@@ -19,7 +19,7 @@ impl PPU {
             PPU::write_background_line(mmu, buffer);
         }
 
-        if mmu.window_enabled() {
+        if mmu.window_enabled() && mmu.background_enabled() {
 
         }
     }

@@ -1,7 +1,7 @@
 import re
 
-IN_OWN = "../dev/log/out4.log"
-IN_EXT = "../dev/log/working2-safety-short.txt"
+IN_OWN = "../dev/log/outoutout.log"
+IN_EXT = "../dev/log/working3-short.txt"
 
 PAT_EXT = re.compile(r"^[\s\S]{6}(?P<address>[0-9a-fA-F]{4})\s(?P<exec>[a-zA-Z]+)")
 PAT_OWN = re.compile(r"^[\s\S]?(?P<address>[0-9a-fA-F]{4})[\s\S](?P<exec>[0-9a-fA-F]+)")

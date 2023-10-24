@@ -30,7 +30,7 @@ impl GbWindow {
         )
         .unwrap();
 
-        window.limit_update_rate(Some(std::time::Duration::from_micros(REFRESH_RATE)));
+        window.limit_update_rate(Some(std::time::Duration::from_micros(REFRESH_RATE / 2)));
         GbWindow {
             true_width: SCREEN_WIDTH * magnification,
             true_height: SCREEN_HEIGHT * magnification,

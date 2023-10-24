@@ -62,7 +62,7 @@ impl Cpu {
     }
 }
 
-pub fn ins_name(ins: u8) -> &'static str {
+pub fn ins_name(ins: u8, next: Option<u8>) -> &'static str {
     match ins {
         0x0 => "NOP",
         0x1 => "LD BC n16",
@@ -267,7 +267,7 @@ pub fn ins_name(ins: u8) -> &'static str {
         0xc8 => "RET Z",
         0xc9 => "RET",
         0xca => "JP Z, a16",
-        0xcb => "PREFIX for next byte", // TODO
+        0xcb => prefixed(next),
         0xcc => "CALL Z, a16",
         0xcd => "CALL a16",
         0xce => "ADC A, n8",
@@ -310,5 +310,47 @@ pub fn ins_name(ins: u8) -> &'static str {
         0xfe => "CP A, n8",
         0xff => "RST $38",
         _ => "INVALID"
+    }
+}
+
+fn prefixed(byte: Option<u8>) -> &'static str {
+    if let Some(byte) = byte {
+        match byte {
+            0x00..=0x07 => "RLC",
+            0x08..=0x0F => "RRC",
+            0x10..=0x17 => "RL",
+            0x18..=0x1F => "RR",
+            0x20..=0x27 => "SLA",
+            0x28..=0x2F => "SRA",
+            0x30..=0x37 => "SWAP",
+            0x38..=0x3F => "SRL",
+            0x40..=0x47 => "BIT 0",
+            0x48..=0x4F => "BIT 1",
+            0x50..=0x57 => "BIT 2",
+            0x58..=0x5F => "BIT 3",
+            0x60..=0x67 => "BIT 4",
+            0x68..=0x6F => "BIT 5",
+            0x70..=0x77 => "BIT 6",
+            0x78..=0x7F => "BIT 7",
+            0x80..=0x87 => "RES 0",
+            0x88..=0x8F => "RES 1",
+            0x90..=0x97 => "RES 2",
+            0x98..=0x9F => "RES 3",
+            0xA0..=0xA7 => "RES 4",
+            0xA8..=0xAF => "RES 5",
+            0xB0..=0xB7 => "RES 6",
+            0xB8..=0xBF => "RES 7",
+            0xC0..=0xC7 => "SET 0",
+            0xC8..=0xCF => "SET 1",
+            0xD0..=0xD7 => "SET 2",
+            0xD8..=0xDF => "SET 3",
+            0xE0..=0xE7 => "SET 4",
+            0xE8..=0xEF => "SET 5",
+            0xF0..=0xF7 => "SET 6",
+            0xF8..=0xFF => "SET 7",
+            _ => "INVALID"
+        }
+    } else {
+        "INVALID"
     }
 }

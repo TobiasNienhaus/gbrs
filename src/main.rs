@@ -5,6 +5,7 @@ mod window;
 
 use minifb::{Key, KeyRepeat};
 use std::str::FromStr;
+use std::time::Instant;
 
 use crate::window::GbWindow;
 use clap::{crate_version, App, Arg};
@@ -68,14 +69,14 @@ impl CliOpts {
 }
 
 fn main() {
-    println!(
-        "Mem region: {:?}",
-        game_boy::memory::MemRegion::get_region(0xC3C8)
-    );
+    // println!(
+    //     "Mem region: {:?}",
+    //     game_boy::memory::MemRegion::get_region(0xC3C8)
+    // );
     let opts = CliOpts::load();
     let mut gb = game_boy::GameBoy::load(&opts.rom_path.into()).unwrap();
-
-    gb.memory().rom().print_meta();
+    //
+    // gb.memory().rom().print_meta();
 
     let mut window = GbWindow::new(opts.magnification);
 
@@ -88,12 +89,13 @@ fn main() {
     let mut cou = 0;
 
     while window.is_open() {
+        let frame_start = Instant::now();
         let mut has_clocks_left_in_frame = true;
 
-        while !gb.clock(window.buffer_mut()) {
-            // let info = gb.clock(window.buffer_mut());
-            // has_clocks_left_in_frame = !info.frame_done();
-            // if info.instruction().is_new() {
+        while has_clocks_left_in_frame {
+            let info = gb.clock(window.buffer_mut());
+            has_clocks_left_in_frame = !info.frame_done();
+            if info.instruction().is_new() {
                 // println!(
                 //     "[{:#06X}] [{:02X}] {{{}}} -> {}",
                 //     info.instruction().pc(),
@@ -107,30 +109,48 @@ fn main() {
                 //     ),
                 //     ins_name(info.instruction().instruction())
                 // );
-                // println!(
-                //     "{:04X} {:02X} {}",
-                //     info.instruction().stack_info().pc(),
-                //     info.instruction().instruction(),
-                //     info.instruction().stack_info()
-                // );
-                // block_for_line();
-            // }
+                if !gb.cpu().memory().boot_rom_enabled() {
+                // if info.instruction().stack_info().pc() >= 0x100 {
+                    println!(
+                        "{:04X} {:02X} {} {}",
+                        info.instruction().stack_info().pc(),
+                        info.instruction().instruction(),
+                        info.instruction().stack_info(),
+                        format!(
+                            "{} {} {} {}",
+                            if let Some(byte) = info.instruction().data()[0] { format!("{:02X}", byte) } else { "NN".to_owned() },
+                            if let Some(byte) = info.instruction().data()[1] { format!("{:02X}", byte) } else { "NN".to_owned() },
+                            if let Some(byte) = info.instruction().data()[2] { format!("{:02X}", byte) } else { "NN".to_owned() },
+                            if let Some(byte) = info.instruction().data()[3] { format!("{:02X}", byte) } else { "NN".to_owned() },
+                        ),
+                    );
+                }
+            }
             // run = has_clocks_left_in_frame;
         }
         // eprintln!("Frame! {}", cou);
 
         cou += 1;
-
-        for i in window.buffer_mut().iter_mut() {
-            *i = rand::thread_rng().gen_range(0..=3);
-        }
+        let before_display = frame_start.elapsed().as_nanos();
+        // for i in window.buffer_mut().iter_mut() {
+        //     *i = rand::thread_rng().gen_range(0..=3);
+        // }
         window.display();
+        let end = frame_start.elapsed().as_nanos();
+        let display_time = end - before_display;
+        // println!(
+        //     "{} ({}) | {} ({}) | {}",
+        //     before_display,
+        //     before_display as f64 / end as f64,
+        //     display_time,
+        //     display_time as f64 / end as f64,
+        //     end
+        // );
+        //
+        // if cou % 250 == 0 {
+        //     eprintln!("Frame {}", cou)
+        // }
     }
-}
-
-fn block_for_line() {
-    let mut line = String::new();
-    let _ = std::io::stdin().read_line(&mut line).expect("Failed to read line");
 }
 
 // GENERAL TODO

@@ -155,10 +155,8 @@ impl LcdcSettings {
 }
 
 impl MMU {
-    const LCDC: u16 = 0xFF40;
-
     pub fn read_lcdc_settings(&self) -> LcdcSettings {
-        LcdcSettings::from_byte(self.read_8(MMU::LCDC))
+        LcdcSettings::from_byte(self.read_8(adr::video::LCD_CONTROL))
     }
 
     pub fn display_enabled(&self) -> bool {
@@ -210,17 +208,17 @@ impl MMU {
     }
 
     fn set_lcdc_bit(&mut self, bit: u8, high: bool) {
-        let mut val = self.read_8(MMU::LCDC);
+        let mut val = self.read_8(adr::video::LCD_CONTROL);
         if high {
             val |= 1 << bit;
         } else {
             val &= !(1 << bit);
         }
-        self.write_8(MMU::LCDC, val);
+        self.write_8(adr::video::LCD_CONTROL, val);
     }
 
     fn get_lcdc_bit(&self, bit: u8) -> bool {
-        let val = self.read_8(MMU::LCDC);
+        let val = self.read_8(adr::video::LCD_CONTROL);
         (val >> bit) & 0x1 == 0x1
     }
 }

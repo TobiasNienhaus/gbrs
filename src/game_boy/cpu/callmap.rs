@@ -139,6 +139,9 @@ impl Cpu {
             0x1F => self.rra(),
             0x20 => {
                 let param = self.read_i8();
+                // if self.pc > 0xe0 {
+                //     println!("Jump relative by {} on {:04X}", param, self.pc);
+                // }
                 self.jr_cc(Condition::ZNotSet, param)
             }
             0x21 => {

@@ -104,7 +104,7 @@ impl MemRegion {
     }
 
     pub fn is_in_boot_rom(address: u16) -> bool {
-        address < 0x100 - 2
+        address < 0x100
     }
 }
 
@@ -114,6 +114,10 @@ pub struct MMU {
     mem: [u8; NON_ROM_SIZE],
     rom: rom::Rom,
 }
+
+// const DBG_ADDRESS: &[u16] = &[0xFEu16, adr::video::LCD_CONTROL, adr::memory::BOOT_ROM_ENABLED];
+const DBG_WRITE_ADDRESSES: &[u16] = &[0xFF50u16];
+const DBG_READ_ADDRESSES: &[u16] = &[0xFF];
 
 impl MMU {
     const ROM_REGION: Range<u16> = 0x0..0x8000;
@@ -152,14 +156,9 @@ impl MMU {
     }
 
     // TODO maybe just return bool?
+
+
     pub fn write_8(&mut self, address: u16, val: u8) -> MemResult<()> {
-        if address == 0xDFE0 {
-            // println!("--------------\nWriting {:#04X} to oxDFE0", val);
-        } else if address == adr::interrupts::FLAGS && val & 0b1 == 0b1 {
-            // println!("-----------------------------------");
-            // println!("                           000JSTLV");
-            // println!("Setting interrupt flags to {:#08b}", val)
-        }
         // TODO there are some special addresses with specific behavior
         // 0xFF46 -> Transfer ROM or RAM to OAM
         if address == MMU::DMA {
@@ -236,7 +235,7 @@ impl MMU {
         // TODO allow Boot ROM Reads
     }
 
-    fn boot_rom_enabled(&self) -> bool {
+    pub fn boot_rom_enabled(&self) -> bool {
         self.mem[adr::memory::BOOT_ROM_ENABLED as usize - 0x8000] == 0x00
     }
 }

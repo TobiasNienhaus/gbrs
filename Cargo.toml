@@ -7,8 +7,11 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-minifb = "0.19.3"
+minifb = "0.25.0"
 # For now for testing
 rand = "0.8.3"
 clap = "2.33.3"
 # https://docs.rs/bitfield/0.13.2/bitfield/macro.bitfield.html
+
+[profile.release]
+debug = true
