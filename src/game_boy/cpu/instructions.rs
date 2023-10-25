@@ -1404,6 +1404,7 @@ impl Cpu {
         self.set_carry_bit(false); // By definition
         self.set_half_carry_bit(false); // By definition
         self.set_negative_bit(false); // By definition
+        *self.a_reg_mut() = res;
         2
     }
 }

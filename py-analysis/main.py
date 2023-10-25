@@ -1,33 +1,62 @@
 import re
 
-IN_OWN = "../dev/log/outoutout.log"
+IN_OWN = "../dev/log/outoutout2.log"
 IN_EXT = "../dev/log/working3-short.txt"
 
-PAT_EXT = re.compile(r"^[\s\S]{6}(?P<address>[0-9a-fA-F]{4})\s(?P<exec>[a-zA-Z]+)")
-PAT_OWN = re.compile(r"^[\s\S]?(?P<address>[0-9a-fA-F]{4})[\s\S](?P<exec>[0-9a-fA-F]+)")
+PAT_EXT = re.compile(
+    r"^[\s\S]{6}(?P<address>[0-9a-fA-F]{4})\s(?P<exec>[a-zA-Z]+)[\s\S]+BC=(?P<BC>[0-9A-F]{4})\sDE=(?P<DE>[0-9A-F]{4})\sHL=(?P<HL>[0-9A-F]{4})\sAF=(?P<AF>[0-9A-F]{4})\sSP=(?P<SP>[0-9A-F]{4})\sPC=(?P<PC>[0-9A-F]{4})"
+)
+PAT_OWN = re.compile(
+    r"^[\s\S]?(?P<address>[0-9a-fA-F]{4})[\s\S](?P<exec>[0-9a-fA-F]+)\sBC=(?P<BC>[0-9A-F]{4})\sDE=(?P<DE>[0-9A-F]{4})\sHL=(?P<HL>[0-9A-F]{4})\sAF=(?P<AF>[0-9A-F]{4})\sSP=(?P<SP>[0-9A-F]{4})\sPC=(?P<PC>[0-9A-F]{4})"
+)
 
 
 def main():
-    addresses_own = []
-    exec_own = []
+    own = {
+        "address": [],
+        "exec": [],
+        "BC": [],
+        "DE": [],
+        "HL": [],
+        "AF": [],
+        "SP": [],
+        "PC": [],
+    }
+    ext = {
+        "address": [],
+        "exec": [],
+        "BC": [],
+        "DE": [],
+        "HL": [],
+        "AF": [],
+        "SP": [],
+        "PC": [],
+    }
 
     with open(IN_OWN, encoding="utf-16le") as fi:
         for line in fi:
             for match in PAT_OWN.finditer(line):
-                addresses_own.append(match.group("address"))
-                exec_own.append(match.group("exec"))
-
-    addresses_ext = []
-    exec_ext = []
+                for key in own.keys():
+                    own[key].append(match.group(key))
 
     with open(IN_EXT) as fi:
         for line in fi:
             for match in PAT_EXT.finditer(line):
-                addresses_ext.append(match.group("address"))
-                exec_ext.append(match.group("exec"))
+                for key in own.keys():
+                    ext[key].append(match.group(key))
 
-    for i, (own, ext) in enumerate(zip(addresses_own, addresses_ext)):
-        print(f"{own} | {ext}")
+    cmp("address", ext, own)
+    cmp("BC", ext, own)
+    cmp("DE", ext, own)
+    cmp("HL", ext, own)
+    cmp("AF", ext, own)
+    cmp("SP", ext, own)
+    cmp("PC", ext, own)
+
+
+def cmp(name, a, b):
+    print(name)
+    for i, (own, ext) in enumerate(zip(a[name], b[name])):
         if own != ext:
             print(f"{i}: {own} != {ext}")
             break

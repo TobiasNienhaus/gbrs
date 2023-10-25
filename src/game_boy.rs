@@ -145,7 +145,8 @@ impl GameBoy {
             self.cpu.set_interrupt(Interrupt::VBlank);
         }
 
-        // TODO set modes
+        // TODO variable MODE 3 length https://gbdev.io/pandocs/Rendering.html#mode-3-length
+        // Pixel Transfer takes different times
         if current_line < GameBoy::DRAW_LINES {
             if clock_in_line < GameBoy::OAM_SEARCH_CLOCKS {
                 // OAM search
@@ -173,6 +174,7 @@ impl GameBoy {
         let new_instruction = self._cpu_clock();
 
         if current_line < GameBoy::DRAW_LINES && clock_in_line + 1 == Self::CLOCKS_PER_LINE {
+            // Probably can't write line by line
             PPU::write_line(self.cpu.memory_mut(), buffer);
         }
 
