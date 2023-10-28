@@ -3,6 +3,7 @@ name = "gbrs"
 version = "0.1.0"
 authors = ["Tobias Nienhaus <me@tobiasnienhaus.me>"]
 edition = "2021"
+build = "build.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -13,5 +14,8 @@ rand = "0.8.3"
 clap = "2.33.3"
 # https://docs.rs/bitfield/0.13.2/bitfield/macro.bitfield.html
 
-[profile.release]
-debug = true
+[build-dependencies]
+embed-resource = "2.4.0"
+
+#[profile.release]
+#debug = true

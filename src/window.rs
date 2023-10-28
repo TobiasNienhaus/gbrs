@@ -6,7 +6,8 @@ pub const SCREEN_WIDTH: usize = 160;
 pub const SCREEN_HEIGHT: usize = 144;
 pub const PIXEL_COUNT: usize = SCREEN_WIDTH * SCREEN_HEIGHT;
 
-use minifb::{Key, Window, WindowOptions};
+use std::str::FromStr;
+use minifb::{Icon, Key, Window, WindowOptions};
 
 // According to https://en.wikipedia.org/wiki/Game_Boy#Technical_specifications
 const COLOR_LOOKUP: [u32; 4] = [0xFF0F380F, 0xFF306230, 0xFF8BAC0F, 0xFF9BBC0F];
@@ -22,6 +23,7 @@ pub struct GbWindow {
 
 impl GbWindow {
     pub fn new(magnification: usize) -> GbWindow {
+        // TODO use builtin scaling in minifb
         let mut window = Window::new(
             "GBRS",
             SCREEN_WIDTH * magnification,
@@ -31,6 +33,8 @@ impl GbWindow {
         .unwrap();
 
         window.limit_update_rate(Some(std::time::Duration::from_micros(REFRESH_RATE / 2)));
+        #[cfg(target_family="windows")]
+        window.set_icon(Icon::from_str("res/icon/gbrs16.ico").unwrap());
         GbWindow {
             true_width: SCREEN_WIDTH * magnification,
             true_height: SCREEN_HEIGHT * magnification,
