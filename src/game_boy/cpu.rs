@@ -288,7 +288,12 @@ impl Cpu {
 
     fn read_u8(&mut self) -> u8 {
         let ret = self.peek_u8();
-        self.pc += 1;
+        let (res, carry) = self.pc.overflowing_add(1);
+        if carry {
+            self.mmu.dump_ram();
+            panic!("PC overflow");
+        }
+        self.pc = res;
         ret
     }
 

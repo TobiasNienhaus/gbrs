@@ -6,11 +6,11 @@ mod window;
 use minifb::{Key, KeyRepeat};
 use std::str::FromStr;
 use std::time::Instant;
-
+use chrono::{SecondsFormat, Utc};
 use crate::window::GbWindow;
 use clap::{crate_version, App, Arg};
 use rand::Rng;
-use crate::game_boy::cpu::debug::ins_name;
+use crate::game_boy::cpu::debug::{ins_name, pretty_instruction};
 
 // Links:
 // Endianness Guide:
@@ -87,10 +87,13 @@ fn main() {
     let mut run = true;
 
     let mut cou = 0;
+    let mut counter = 0;
 
     while window.is_open() {
         let frame_start = Instant::now();
         let mut has_clocks_left_in_frame = true;
+
+        let mut has_vblanked = false;
 
         while has_clocks_left_in_frame {
             let info = gb.clock(window.buffer_mut());
@@ -110,21 +113,54 @@ fn main() {
                 //     ins_name(info.instruction().instruction())
                 // );
                 // if !gb.cpu().memory().boot_rom_enabled() {
-                if info.instruction().stack_info().pc() >= 0x100 {
+
+                if !gb.memory().boot_rom_enabled() {
+                    counter += 1;
+                    // println!(
+                    //     "{} {:04X} {:02X} {} {} {}",
+                    //     Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true),
+                    //     info.instruction().stack_info().pc(),
+                    //     info.instruction().instruction(),
+                    //     info.instruction().stack_info(),
+                    //     format!(
+                    //         "{} {} {} {}",
+                    //         if let Some(byte) = info.instruction().data()[0] { format!("{:02X}", byte) } else { "NN".to_owned() },
+                    //         if let Some(byte) = info.instruction().data()[1] { format!("{:02X}", byte) } else { "NN".to_owned() },
+                    //         if let Some(byte) = info.instruction().data()[2] { format!("{:02X}", byte) } else { "NN".to_owned() },
+                    //         if let Some(byte) = info.instruction().data()[3] { format!("{:02X}", byte) } else { "NN".to_owned() },
+                    //     ),
+                    //     ins_name(info.instruction().instruction(), info.instruction().data()[0])
+                    // );
                     println!(
-                        "{:04X} {:02X} {} {} {}",
+                        "{:>10} {:20} {:04X} {:02X} {} LY{:02x}",
+                        counter,
+                        pretty_instruction(&info.instruction(), gb.cpu()),
                         info.instruction().stack_info().pc(),
                         info.instruction().instruction(),
                         info.instruction().stack_info(),
-                        format!(
-                            "{} {} {} {}",
-                            if let Some(byte) = info.instruction().data()[0] { format!("{:02X}", byte) } else { "NN".to_owned() },
-                            if let Some(byte) = info.instruction().data()[1] { format!("{:02X}", byte) } else { "NN".to_owned() },
-                            if let Some(byte) = info.instruction().data()[2] { format!("{:02X}", byte) } else { "NN".to_owned() },
-                            if let Some(byte) = info.instruction().data()[3] { format!("{:02X}", byte) } else { "NN".to_owned() },
-                        ),
-                        ins_name(info.instruction().instruction(), info.instruction().data()[0])
+                        gb.cpu().memory().read_ly()
                     );
+                }
+                // if !gb.memory().boot_rom_enabled() && info.instruction().stack_info().pc() == 0x40 {
+                //     has_vblanked = true;
+                // }
+
+                if has_vblanked && !gb.memory().boot_rom_enabled() {
+                    // println!(
+                    //     "{} {:04X} {:02X} {} {} {}",
+                    //     Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true),
+                    //     info.instruction().stack_info().pc(),
+                    //     info.instruction().instruction(),
+                    //     info.instruction().stack_info(),
+                    //     format!(
+                    //         "{} {} {} {}",
+                    //         if let Some(byte) = info.instruction().data()[0] { format!("{:02X}", byte) } else { "NN".to_owned() },
+                    //         if let Some(byte) = info.instruction().data()[1] { format!("{:02X}", byte) } else { "NN".to_owned() },
+                    //         if let Some(byte) = info.instruction().data()[2] { format!("{:02X}", byte) } else { "NN".to_owned() },
+                    //         if let Some(byte) = info.instruction().data()[3] { format!("{:02X}", byte) } else { "NN".to_owned() },
+                    //     ),
+                    //     ins_name(info.instruction().instruction(), info.instruction().data()[0])
+                    // );
                 }
             }
             // run = has_clocks_left_in_frame;

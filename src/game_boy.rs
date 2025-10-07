@@ -148,6 +148,10 @@ impl GameBoy {
             self.cpu.request_interrupt(Interrupt::VBlank);
         }
 
+        // if current_line == 0 && !self.memory().boot_rom_enabled() {
+        //     println!("New Frame");
+        // }
+
         // TODO variable MODE 3 length https://gbdev.io/pandocs/Rendering.html#mode-3-length
         // Pixel Transfer takes different times
         if current_line < GameBoy::DRAW_LINES {

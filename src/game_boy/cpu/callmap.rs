@@ -6,7 +6,7 @@ const FLAG_SET_PC: u16 = 0x69E0;
 impl Cpu {
     pub fn tick(&mut self) -> u32 {
         if self.handle_interrupts() {
-            // println!("Handled Interrupt");
+            println!("Handled Interrupt");
             return 5;
         }
         if !self.is_running() {

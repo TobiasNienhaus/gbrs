@@ -8,6 +8,7 @@ pub mod misc;
 pub mod rom;
 pub mod video;
 mod flags;
+mod debug;
 
 use addresses as adr;
 

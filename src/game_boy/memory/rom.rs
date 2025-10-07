@@ -30,7 +30,6 @@ pub type RomResult<T> = Result<T, RomError>;
 #[derive(Debug)]
 pub enum CartridgeType {
     RomOnly,
-    MBC1
     // TODO
 }
 
@@ -38,7 +37,6 @@ impl CartridgeType {
     fn from_byte(b: u8) -> RomResult<CartridgeType> {
         Ok(match b {
             0x0 => CartridgeType::RomOnly,
-            0x1 => CartridgeType::MBC1,
             _ => return Err(RomError::UnsupportedCartridgeType(b)),
         })
     }

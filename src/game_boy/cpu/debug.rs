@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter};
 use crate::game_boy::cpu::{Cpu, Register16, Register8};
-
+use crate::game_boy::InstructionInformation;
 
 #[derive(Copy, Clone)]
 pub struct DebugStackInfo {
@@ -59,6 +59,76 @@ impl Cpu {
             pc: self.pc,
             sp: self.sp
         }
+    }
+}
+
+pub fn pretty_instruction(info: &InstructionInformation, cpu: &Cpu) -> String {
+
+    let n16 = info.data[0].zip(info.data[1]).map(|(a, b)| u16::from_le_bytes([a, b])).map_or(
+        // The value to return if the Option is None
+        "INVALID".to_string(),
+        // The closure to run if the Option is Some(value)
+        |value| format!("{:04x}", value)
+    );
+
+    let n8 = info.data[0].map(|a| u8::from_le_bytes([a])).map_or(
+        // The value to return if the Option is None
+        "INVALID".to_string(),
+        // The closure to run if the Option is Some(value)
+        |value| format!("{:02x}", value)
+    );
+
+    let e8 = info.data[0].map(|a| i8::from_le_bytes([a])).map_or(
+        // The value to return if the Option is None
+        "INVALID".to_string(),
+        // The closure to run if the Option is Some(value)
+        |value| format!("{:02x} ({})", value, value)
+    );
+
+    match info.instruction() {
+        0x1 => format!("LD BC {}", n16),
+        0x6 => format!("LD B, {}", n8),
+        0x8 => format!("LD [{}], SP", n16),
+        0xE => format!("LD C, {}", n8),
+        0x10 => format!("STOP {}", n8),
+        0x11 => format!("LD DE, {}", n16),
+        0x16 => format!("LD D, {}", n8),
+        0x18 => format!("JR {}", e8),
+        0x1E => format!("LD, E, {}", n8),
+        0x20 => format!("JR, NZ, {}", e8),
+        0x21 => format!("LD HL, {}", n16),
+        0x26 => format!("LD H, {}", n8),
+        0x28 => format!("JR Z, {}", e8),
+        0x2e => format!("LD L, {}", n8),
+        0x31 => format!("LD SP, {}", n16),
+        0x36 => format!("LD [HL], {}", n8),
+        0x38 => format!("JR C, {}", e8),
+        0x3e => format!("LD A, {}", n8),
+        0xc2 => format!("JP NZ, {}", n16),
+        0xc3 => format!("JP {}", n16),
+        0xc4 => format!("CALL NZ, {}", n16),
+        0xc6 => format!("ADD A, {}", n8),
+        0xca => format!("JP Z, {}", n16),
+        0xcc => format!("CALL Z, {}", n16),
+        0xcd => format!("CALL {}", n16),
+        0xce => format!("ADC A, {}", n8),
+        0xd2 => format!("JP NC, {}", n16),
+        0xd4 => format!("CALL NC, {}", n16),
+        0xd6 => format!("SUB A, {}", n8),
+        0xda => format!("JP C, {}", n16),
+        0xdc => format!("CALL C, {}", n16),
+        0xde => format!("SBC A, {}", n8),
+        0xe0 => format!("LDH [ff00+{}], A", n8),
+        0xe6 => format!("AND A, {}", n8),
+        0xe8 => format!("ADD SP, {}", e8),
+        0xea => format!("LD [{}], A", n16),
+        0xee => format!("XOR A, {}", n8),
+        0xf0 => format!("LDH A, [ff00+{}]", n8),
+        0xf6 => format!("OR A, {}", n8),
+        0xf8 => format!("LD HL, SP + {}", e8),
+        0xfa => format!("LD A, [{}]", n16),
+        0xfe => format!("CP A, {}", n8),
+        i => ins_name(i, info.data[0]).to_owned()
     }
 }
 

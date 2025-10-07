@@ -357,6 +357,9 @@ impl Cpu {
     ///
     /// 1 cycle
     pub(super) fn di(&mut self) -> u32 {
+        if !self.mmu.boot_rom_enabled() {
+            println!("DI -> Disable Interrupts");
+        }
         self.interrupts_enabled = false;
         1
     }
@@ -366,6 +369,7 @@ impl Cpu {
     ///
     /// 1 cycle
     pub(super) fn ei(&mut self) -> u32 {
+        println!("EI -> Enable interrupts");
         self.interrupts_enabled = true;
         1
     }
@@ -875,6 +879,7 @@ impl Cpu {
     ///
     /// 4 cycles
     pub(super) fn reti(&mut self) -> u32 {
+        println!("RETI");
         self.ei();
         self.ret();
         4
