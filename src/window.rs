@@ -23,7 +23,6 @@ pub struct GbWindow {
 
 impl GbWindow {
     pub fn new(magnification: usize) -> GbWindow {
-        // TODO use builtin scaling in minifb
         let mut window = Window::new(
             "GBRS",
             SCREEN_WIDTH * magnification,
@@ -33,6 +32,7 @@ impl GbWindow {
         .unwrap();
 
         window.limit_update_rate(Some(std::time::Duration::from_micros(REFRESH_RATE / 2)));
+
         #[cfg(target_family="windows")]
         window.set_icon(Icon::from_str("res/icon/gbrs16.ico").unwrap());
         GbWindow {

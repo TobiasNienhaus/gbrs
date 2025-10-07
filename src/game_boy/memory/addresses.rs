@@ -1,14 +1,31 @@
 /// Interrupt-addresses
 pub mod interrupts {
+    /// IE (0xFFFF)
     pub const ENABLE: u16 = 0xFFFF;
+    /// IF (0xFF0F)
     pub const FLAGS: u16 = 0xFF0F;
+}
+
+pub mod input {
+    /// Joystick data
+    pub const P1: u16 = 0xFF00;
+}
+
+pub mod serial {
+    /// Serial - byte to be sent
+    pub const SB: u16 = 0xFF01;
+    /// Serial - configuration
+    pub const SC: u16 = 0xFF02;
 }
 
 /// Timers-addresses
 pub mod timer {
     pub const DIVIDER_REGISTER: u16 = 0xFF04;
+    /// Timer Counter (TIMA)
     pub const COUNTER: u16 = 0xFF05;
+    /// Timer Modulo (TMA)
     pub const MODULO: u16 = 0xFF06;
+    /// Timer Control (TAC)
     pub const CONTROL: u16 = 0xFF07;
 }
 
@@ -36,4 +53,5 @@ pub mod video {
 
 pub mod memory {
     pub const BOOT_ROM_ENABLED: u16 = 0xFF50;
+    pub const DMA_TRANSFER_SOURCE_ADDRESS: u16 = 0xFF46;
 }

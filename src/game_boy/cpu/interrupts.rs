@@ -1,68 +1,35 @@
-use super::{super::memory::addresses as adr, check_bit, Cpu};
-
-#[derive(Copy, Clone, Debug)]
-pub enum Interrupt {
-    VBlank,
-    LcdcStatus,
-    TimerOverflow,
-    SerialTransferCompletion,
-    Input,
-}
-
-impl Interrupt {
-    /// The address to jump to when the interrupt occurs
-    pub fn jump_address(&self) -> u16 {
-        // TODO keine Ahnung, was ich hier mache >:D
-        match self {
-            Interrupt::VBlank => 0x40,
-            Interrupt::LcdcStatus => 0x48,
-            Interrupt::TimerOverflow => 0x58,
-            Interrupt::SerialTransferCompletion => 0x50,
-            Interrupt::Input => 0x60,
-        }
-    }
-
-    /// The bit of the IF flag register for the specific interrupt
-    pub fn if_ie_bit(&self) -> u8 {
-        match self {
-            Interrupt::VBlank => 0,
-            Interrupt::LcdcStatus => 1,
-            Interrupt::TimerOverflow => 2,
-            Interrupt::SerialTransferCompletion => 3,
-            Interrupt::Input => 4,
-        }
-    }
-}
+use crate::game_boy::interrupt::Interrupt;
+use super::Cpu;
 
 impl Cpu {
-    pub fn set_interrupt(&mut self, interrupt: Interrupt) {
-        let if_val = self.mmu.read_8(adr::interrupts::FLAGS) | (1 << interrupt.if_ie_bit());
-        self.mmu.write_8(adr::interrupts::FLAGS, if_val);
+    /// Request an interrupt, meaning it will possibly be handled next -> set the specific bit of IF high
+    pub fn request_interrupt(&mut self, interrupt: Interrupt) {
+        self.mmu.request_interrupt(interrupt);
     }
 
-    fn unset_interrupt(&mut self, interrupt: Interrupt) {
-        let if_val = self.mmu.read_8(adr::interrupts::FLAGS) & !(1 << interrupt.if_ie_bit());
-        self.mmu.write_8(adr::interrupts::FLAGS, if_val);
+    /// Reset a requested interrupt, meaning it has been handled -> set the specific bit of IF low
+    fn reset_requested_interrupt(&mut self, interrupt: Interrupt) {
+        self.mmu.reset_requested_interrupt(interrupt);
     }
 
+    /// check if a specific interrupt is enabled in the IE-flags
     fn interrupt_enabled(&self, interrupt: Interrupt) -> bool {
-        check_bit(
-            self.mmu.read_8(adr::interrupts::ENABLE),
-            interrupt.if_ie_bit(),
-        )
+        self.mmu.interrupt_enabled(interrupt)
     }
 
     fn interrupt_requested(&self, interrupt: Interrupt) -> bool {
-        self.interrupt_enabled(interrupt)
-            && check_bit(self.mmu.read_8(adr::interrupts::FLAGS), interrupt.if_ie_bit())
+        self.mmu.interrupt_requested(interrupt)
     }
 
     fn execute_interrupt(&mut self, interrupt: Interrupt) -> bool {
         // TODO keine Ahnung, ob das so passt
         if self.interrupt_requested(interrupt) {
-            // println!("Interrupted: {:?}", interrupt);
+            println!("Interrupted: {:?}", interrupt);
+            // IME disabled
             self.interrupts_enabled = false;
-            self.unset_interrupt(interrupt);
+            // IF disabled
+            self.reset_requested_interrupt(interrupt);
+            // Regular call to jump address
             self.call(interrupt.jump_address());
             return true;
         }

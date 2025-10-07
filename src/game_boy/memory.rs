@@ -7,6 +7,7 @@ pub mod addresses;
 pub mod misc;
 pub mod rom;
 pub mod video;
+mod flags;
 
 use addresses as adr;
 
@@ -106,6 +107,10 @@ impl MemRegion {
     pub fn is_in_boot_rom(address: u16) -> bool {
         address < 0x100
     }
+
+    pub fn is_writable(address: u16) -> bool {
+        address >= 0x8000
+    }
 }
 
 #[derive(Debug)]
@@ -160,17 +165,47 @@ impl MMU {
 
     pub fn write_8(&mut self, address: u16, val: u8) -> MemResult<()> {
         // TODO there are some special addresses with specific behavior
-        // 0xFF46 -> Transfer ROM or RAM to OAM
-        if address == MMU::DMA {
-            self.dma_transfer(val);
+        // if address == adr::memory::DMA_TRANSFER_SOURCE_ADDRESS {
+        //     self.dma_transfer(val);
+        //     Ok(())
+        // } else
+        if MemRegion::is_writable(address) {
+            match address {
+                // region Debug cases
+                // adr::interrupts::FLAGS => println!("Writing to interrupt flags {:b}", val),
+                // adr::interrupts::ENABLE => println!("Writing to interrupt enable {:b}", val),
+                // endregion Debug cases end
+                // TODO: check, if we need to write the value to RAM as well
+                adr::memory::DMA_TRANSFER_SOURCE_ADDRESS => self.dma_transfer(val),
+                _ => {}
+            }
+            self.mem[address as usize - 0x8000] = match address {
+                adr::timer::DIVIDER_REGISTER => 0,
+                adr::video::LCD_STATUS => val & 0xFC, // bit 0 and 1 can't be written
+                _ => val
+            };
             Ok(())
-        } else if MMU::ROM_REGION.contains(&address) {
+        } else {
             Err(MemError::InvalidAddressRegion(MemRegion::get_region(
                 address,
             )))
-        } else {
+        }
+    }
+
+    /// Will try to write value to address in ram without any additional checks or handling
+    /// e.g. zeroing the divider register or the DMA transfer won't be done
+    ///
+    /// The only check is, to see if the address is in range
+    ///
+    /// Address has to be >= 0x8000
+    pub fn raw_write_8(&mut self, address: u16, val: u8) -> MemResult<()> {
+        if MemRegion::is_writable(address) {
             self.mem[address as usize - 0x8000] = val;
             Ok(())
+        } else {
+            Err(MemError::InvalidAddressRegion(MemRegion::get_region(
+                address,
+            )))
         }
     }
 

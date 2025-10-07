@@ -1,3 +1,4 @@
+use crate::game_boy::helpers::check_bit;
 use super::*;
 
 impl Cpu {
@@ -9,7 +10,7 @@ impl Cpu {
         1
     }
 
-    /// Add the value that HL points to to A plus the carry flag
+    /// Add the value that HL points to, to A plus the carry flag
     ///
     /// 2 cycles
     pub(super) fn adc_hl(&mut self) -> u32 {
@@ -17,7 +18,7 @@ impl Cpu {
         2
     }
 
-    /// Add a u8 to A
+    /// Add a byte (u8) to A
     ///
     /// 2 cycles
     pub(super) fn adc(&mut self, n8: u8) -> u32 {
@@ -92,7 +93,7 @@ impl Cpu {
         let hl = self.reg16(Register16::HL);
         let (res, overflow) = hl.overflowing_add(n16);
 
-        // Does adding the lower half of the numbers (plus carry) overflow?
+        // Does adding the lower half of the numbers overflow?
         let half_overflow = ((hl & 0xFFF) + (n16 & 0xFFF)) > 0xFFF;
 
         self.set_negative_bit(false); // By definition
@@ -195,6 +196,7 @@ impl Cpu {
         // the CALL on the stack, such that RET can pop it later; then,
         // it executes an implicit JP n16.
         // TODO check if correct
+        // println!("Call {:04X} return to {:04X}", n16, self.pc);
         self.push_n16(self.pc);
         self.pc = n16;
         6
@@ -247,10 +249,12 @@ impl Cpu {
         // TODO This one doesn't set the flags correctly
         // specifically the half carry and the carry flag
         let a = self.a_reg();
-        self.set_zero_bit(a == n8); // Result is only zero, if A == n8
+        let (res, underflow) = a.overflowing_sub(n8);
+        self.set_zero_bit(res == 0); // Result is only zero, if A == n8
         self.set_negative_bit(true);
-        self.set_half_carry_bit(((a & 0xF) as i16 - (n8 & 0xF) as i16) < 0);
-        self.set_carry_bit(n8 > a); // Result would have to borrow
+        // self.set_half_carry_bit(((a & 0xF) as i16 - (n8 & 0xF) as i16) < 0); // old approach
+        self.set_half_carry_bit(a & 0xF < n8 & 0xF); // new approach
+        self.set_carry_bit(underflow); // Result would have to borrow
         2
     }
 
@@ -353,18 +357,15 @@ impl Cpu {
     ///
     /// 1 cycle
     pub(super) fn di(&mut self) -> u32 {
-        // TODO shouldn't this set a bit at some address in memory?
         self.interrupts_enabled = false;
         1
     }
 
     /// Enable interrupts by setting the IME flag.
-    /// Normally only set AFTER the instruction following this one
+    /// TODO: Normally only set AFTER the instruction following this one
     ///
     /// 1 cycle
     pub(super) fn ei(&mut self) -> u32 {
-        // println!("!!!!!!!!!!!!!!!!!!!!!!!!!!Enable interrupts");
-        // TODO shouldn't this set a bit at some address in memory?
         self.interrupts_enabled = true;
         1
     }
@@ -682,8 +683,9 @@ impl Cpu {
     ///
     /// 5 cycles
     pub(super) fn ld_sp_to_const16addr(&mut self, n16: u16) -> u32 {
-        self.mmu.write_8(n16, (self.sp & 0xFF) as u8);
-        self.mmu.write_8(n16 + 1, (self.sp >> 8) as u8);
+        // TODO ORDER???
+        self.mmu.write_8(n16, (self.sp >> 8) as u8);
+        self.mmu.write_8(n16 + 1, (self.sp & 0xFF) as u8);
         5
     }
 
@@ -903,7 +905,8 @@ impl Cpu {
     /// 1 cycle
     pub(super) fn rla(&mut self) -> u32 {
         self.rl(Register8::A);
-        self.set_zero_bit(false); // By definition
+        // self.set_zero_bit(false); // By definition
+        //                              by which definition?
         1
     }
 

@@ -2,6 +2,7 @@ use super::*;
 use super::super::video::VideoMode;
 
 use addresses as adr;
+use crate::game_boy::helpers::check_bit;
 
 impl VideoMode {
     fn to_two_bit(&self) -> u8 {
@@ -22,10 +23,6 @@ impl VideoMode {
             _ => unreachable!("Somehow the bitwise and didn't do shit")
         }
     }
-}
-
-fn check_bit(byte: u8, bit: u8) -> bool {
-    (byte >> bit) & 0x1 == 0x1
 }
 
 pub enum SpriteSize {
@@ -267,8 +264,11 @@ impl MMU {
     //     self.get_stat_bit(2)
     // }
 
-    pub fn update_lyc_ly_cmp(&mut self) {
-        self.set_lcd_status(LcdStatusBit::LycLyCmp, self.read_lyc() == self.read_ly());
+    /// Updates the specific LCD status, returns, if an
+    pub fn update_lyc_ly_cmp(&mut self) -> bool {
+        let cond = self.read_lyc() == self.read_ly();
+        self.set_lcd_status(LcdStatusBit::LycLyCmp, cond);
+        cond
     }
 
     pub fn set_lcd_status(&mut self, bit: LcdStatusBit, high: bool) {
@@ -411,15 +411,21 @@ impl Sprite {
         let mut colors = [[0u8; 8]; 8];
         for (idx, b) in bytes.to_le_bytes().iter().enumerate() {
             let line = idx / 2;
-            let low_bit = idx % 2 == 0; // Or is it 1?
+            let low_bit = idx % 2 == 1;
             for bit in 0..8 {
                 if low_bit {
-                    colors[line][bit] |= (b >> bit) & 0b1;
+                    colors[7 - line][bit] |= (b >> (7 - bit)) & 0b1;
                 } else {
-                    colors[line][bit] |= ((b >> bit) & 0b1) << 1;
+                    colors[7 - line][bit] |= ((b >> (7 - bit)) & 0b1) << 1;
                 }
             }
         }
+        // if bytes == 311542565274377169622007028479951100 {
+        //     println!("Load sprite {:032X}", bytes);
+        //     for line in colors {
+        //         println!("{:?}", line)
+        //     }
+        // }
         Sprite {
             colors
         }
@@ -437,6 +443,9 @@ impl Sprite {
 
 impl MMU {
     pub fn read_sprite(&self, address: u16) -> Sprite {
+        // if address > 0x8000 {
+        //     println!("Read sprite from {:04X}", address);
+        // }
         Sprite::from_u128(self.read_128(address))
     }
 }
@@ -492,7 +501,6 @@ impl BgTileMap {
 
 impl MMU {
     pub fn load_bg_tilemap(&self) -> BgTileMap {
-        let mode = self.bg_and_window_tile_data_select();
         let selected = self.bg_tile_map_display_select();
         self.load_tilemap(selected.start_address())
     }

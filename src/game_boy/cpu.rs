@@ -20,6 +20,7 @@ pub struct Cpu {
     pc: u16,
     sp: u16,
     mmu: MMU,
+    /// Also called IME -> Interrupt Master Enable
     interrupts_enabled: bool,
     halted: bool,
     stopped: bool,
@@ -117,10 +118,6 @@ pub enum ResetVec {
     Vec6,
     Vec7,
     Vec8,
-}
-
-fn check_bit(val: u8, bit: u8) -> bool {
-    ((val >> bit) & 0b1) == 0b1
 }
 
 impl Cpu {

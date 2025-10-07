@@ -2,12 +2,14 @@ use crate::game_boy::memory::MemError;
 use crate::game_boy::video::{PPU, VideoMode};
 use std::path::PathBuf;
 use crate::game_boy::cpu::debug::DebugStackInfo;
-use crate::game_boy::cpu::interrupts::Interrupt;
+use crate::game_boy::interrupt::Interrupt;
 use crate::game_boy::memory::video::LcdStatusBit;
 
 pub mod cpu;
 pub mod memory;
 mod video;
+mod interrupt;
+mod helpers;
 
 #[derive(Debug)]
 pub enum GBRSError {
@@ -142,7 +144,8 @@ impl GameBoy {
         let mut stat_interrupt_state = self.cpu.memory().get_lcd_status(LcdStatusBit::LycLyCmp);
 
         if self.clock_number_in_current_frame == Self::V_BLANK_INTERRUPT_CLOCK {
-            self.cpu.set_interrupt(Interrupt::VBlank);
+            // println!("VBLANK interrupt");
+            self.cpu.request_interrupt(Interrupt::VBlank);
         }
 
         // TODO variable MODE 3 length https://gbdev.io/pandocs/Rendering.html#mode-3-length
@@ -167,7 +170,7 @@ impl GameBoy {
         }
 
         if !self.old_stat_interrupt_state && stat_interrupt_state {
-            self.cpu.set_interrupt(Interrupt::LcdcStatus);
+            self.cpu.request_interrupt(Interrupt::LcdcStatus);
         }
 
         // TODO first draw or first new clock()

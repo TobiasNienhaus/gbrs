@@ -1,4 +1,4 @@
-#![feature(generators, generator_trait)]
+#![feature(coroutines)]
 
 mod game_boy;
 mod window;
@@ -109,10 +109,10 @@ fn main() {
                 //     ),
                 //     ins_name(info.instruction().instruction())
                 // );
-                if !gb.cpu().memory().boot_rom_enabled() {
-                // if info.instruction().stack_info().pc() >= 0x100 {
+                // if !gb.cpu().memory().boot_rom_enabled() {
+                if info.instruction().stack_info().pc() >= 0x100 {
                     println!(
-                        "{:04X} {:02X} {} {}",
+                        "{:04X} {:02X} {} {} {}",
                         info.instruction().stack_info().pc(),
                         info.instruction().instruction(),
                         info.instruction().stack_info(),
@@ -123,6 +123,7 @@ fn main() {
                             if let Some(byte) = info.instruction().data()[2] { format!("{:02X}", byte) } else { "NN".to_owned() },
                             if let Some(byte) = info.instruction().data()[3] { format!("{:02X}", byte) } else { "NN".to_owned() },
                         ),
+                        ins_name(info.instruction().instruction(), info.instruction().data()[0])
                     );
                 }
             }

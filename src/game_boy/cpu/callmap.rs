@@ -5,7 +5,6 @@ const FLAG_SET_PC: u16 = 0x69E0;
 
 impl Cpu {
     pub fn tick(&mut self) -> u32 {
-        // TODO First interrupt then halt?
         if self.handle_interrupts() {
             // println!("Handled Interrupt");
             return 5;
